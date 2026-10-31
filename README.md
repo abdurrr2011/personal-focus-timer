@@ -1,8 +1,9 @@
-# Focus Tracker
-
-A lightweight Pomodoro desktop timer for Windows 11, styled as an original neon-pixel HUD. It keeps the timer readable, the controls close at hand, and your settings on your device.
-
-<a href="https://www.electronjs.org/"><img src="assets/electron-logo.svg" alt="Electron logo" width="96" height="96"></a>
+<div align="center">
+  <a href="https://www.electronjs.org/"><img src="assets/electron-logo.svg" alt="Electron logo" width="96" height="96"></a>
+  <h1>Focus Tracker</h1>
+  <p><strong>A little more focus. A lot more flow.</strong></p>
+  <p>A neon-pixel Pomodoro timer for Windows 11, with sessions, breaks, and your preferences kept on your device.</p>
+</div>
 
 ## What it does
 
