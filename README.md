@@ -101,3 +101,7 @@ assets/              Original Focus Tracker icon assets
 The renderer runs with context isolation, sandboxing, and Node integration disabled. A restrictive Content Security Policy blocks network connections and remote scripts. The only IPC functions are exposed by the preload bridge. User settings and timer state stay in the local app-data directory.
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common Windows setup and notification issues, and [PROJECT_STATUS.md](PROJECT_STATUS.md) for verification state and remaining limitations.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

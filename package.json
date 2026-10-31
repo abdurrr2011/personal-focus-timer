@@ -4,7 +4,7 @@
   "private": true,
   "description": "A tiny neon-pixel Pomodoro timer for Windows 11.",
   "author": "Abdurakhman",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "engines": {
     "node": ">=22.12.0",
     "npm": ">=11.0.0"
