@@ -238,9 +238,11 @@ function registerIpc() {
     const durationsChanged = mergedSettings.focusMinutes !== settings.focusMinutes
       || mergedSettings.shortBreakMinutes !== settings.shortBreakMinutes
       || mergedSettings.longBreakMinutes !== settings.longBreakMinutes;
+    const breakCycleChanged = mergedSettings.sessionsUntilLongBreak !== settings.sessionsUntilLongBreak;
     settings = mergedSettings;
     applyLoginSetting();
     if (durationsChanged) timerState = resetTimer(timerState, settings);
+    else if (breakCycleChanged) timerState = { ...timerState, focusInCycle: 0 };
     mainWindow?.setAlwaysOnTop(settings.alwaysOnTop, 'floating');
     persist();
     sendSnapshot();

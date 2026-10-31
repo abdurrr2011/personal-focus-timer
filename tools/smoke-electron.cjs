@@ -95,6 +95,24 @@ async function main() {
     assert.equal(await evaluate('window.__previewCalls[0].paused'), true);
     console.log('PASS reset, session mode selection, and settings dialog');
 
+    await click('[data-action="open-settings"]');
+    await evaluate(`(() => {
+      document.querySelector('[name="sessionsUntilLongBreak"]').value = '3';
+      return true;
+    })()`);
+    await click('[data-action="save-settings"]');
+    snapshot = await evaluate('window.focusTracker.getSnapshot()');
+    assert.equal(snapshot.settings.sessionsUntilLongBreak, 3);
+    assert.equal(await evaluate('document.querySelectorAll("#cycle-blocks .cycle-unit").length'), 3);
+    assert.equal(await evaluate('document.querySelector("#cycle-label").textContent'), '0 of 3 focus sessions complete');
+    await click('[data-action="open-settings"]');
+    await evaluate(`(() => {
+      document.querySelector('[name="sessionsUntilLongBreak"]').value = '4';
+      return true;
+    })()`);
+    await click('[data-action="save-settings"]');
+    console.log('PASS configurable long-break interval and cycle progress display');
+
     await click('[data-action="compact"]');
     assert.equal(await evaluate('document.body.classList.contains("compact")'), true);
     await click('[data-action="compact"]');

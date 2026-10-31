@@ -45,6 +45,13 @@ test('malformed settings are clamped and unknown keys are ignored', () => {
   assert.equal('surprise' in settings, false);
 });
 
+test('long-break interval defaults and clamps to two through eight sessions', () => {
+  assert.equal(sanitizeSettings().sessionsUntilLongBreak, 4);
+  assert.equal(sanitizeSettings({ sessionsUntilLongBreak: 1 }).sessionsUntilLongBreak, 2);
+  assert.equal(sanitizeSettings({ sessionsUntilLongBreak: 99 }).sessionsUntilLongBreak, 8);
+  assert.equal(sanitizeSettings({ sessionsUntilLongBreak: 'invalid' }).sessionsUntilLongBreak, 4);
+});
+
 test('a selected alert sound filename survives a store reload', () => {
   withStore((store) => {
     const soundAlertFile = 'alert-12345678-1234-1234-1234-123456789abc.wav';

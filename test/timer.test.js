@@ -64,6 +64,15 @@ test('every fourth completed focus session schedules the long break', () => {
   assert.equal(next.remainingMs, 15 * 60_000);
 });
 
+test('the configured focus-session interval schedules a long break', () => {
+  const cycleSettings = { ...settings, sessionsUntilLongBreak: 3 };
+  const state = { ...createTimerState(cycleSettings), focusInCycle: 2, completedSessions: 5 };
+  const next = finishSession({ ...state, mode: 'focus', status: 'running' }, cycleSettings);
+  assert.equal(next.mode, 'longBreak');
+  assert.equal(next.focusInCycle, 0);
+  assert.equal(next.completedSessions, 6);
+});
+
 test('finishing a break returns to a fresh focus session without changing the focus count', () => {
   const state = { ...createTimerState(settings), mode: 'shortBreak', status: 'running', completedSessions: 2, focusInCycle: 2 };
   const next = finishSession(state, settings);
@@ -76,6 +85,15 @@ test('finishing a break returns to a fresh focus session without changing the fo
 test('durations are clamped to a usable range when settings are malformed', () => {
   assert.equal(durationFor('focus', { focusMinutes: 0 }), 60_000);
   assert.equal(durationFor('shortBreak', { shortBreakMinutes: 999 }), 120 * 60_000);
+});
+
+test('the long-break interval is clamped to two through eight focus sessions', () => {
+  const state = { ...createTimerState(settings), mode: 'focus', focusInCycle: 1 };
+  const shortCycle = finishSession({ ...state, status: 'running' }, { ...settings, sessionsUntilLongBreak: 1 });
+  assert.equal(shortCycle.mode, 'longBreak');
+  const longCycle = finishSession({ ...state, status: 'running', focusInCycle: 0 }, { ...settings, sessionsUntilLongBreak: 99 });
+  assert.equal(longCycle.mode, 'shortBreak');
+  assert.equal(longCycle.focusInCycle, 1);
 });
 
 test('pausing after the deadline completes the session instead of freezing at zero', () => {

@@ -6,7 +6,7 @@ A lightweight Pomodoro desktop timer for Windows 11, styled as an original neon-
 
 ## What it does
 
-- Focus, short-break, and long-break sessions, with a long break after every four completed focus sessions.
+- Focus, short-break, and long-break sessions, with a configurable long break after 2–8 completed focus sessions (four by default).
 - Start, pause, resume, reset, and switch session type; session totals and cycle progress are saved.
 - Deadline-based countdowns continue accurately when the window is hidden, the PC is busy, or the app is reopened.
 - Frameless, draggable window; optional always-on-top; compact floating mode.
@@ -64,7 +64,7 @@ Build output goes to `release/`. `npm run dist` uses electron-builder to package
 - **Close button:** hides the window to the system tray so an active timer is not lost. Use the tray menu's **Quit Focus Tracker** to exit.
 - **Start with Windows:** available in the installed Windows app. It is disabled when running from source because a development checkout is not a stable sign-in target.
 
-Session lengths can be configured from 1 to 120 minutes. Changing a duration resets the current session to the new configured length.
+Session lengths can be configured from 1 to 120 minutes. Changing a duration resets the current session to the new configured length. Choose 2–8 focus sessions before a long break in Preferences; changing this interval starts a fresh cycle without changing your lifetime completed-session count.
 
 To use a custom completion sound, open **Preferences**, select **Choose file**, and choose a WAV, MP3, OGG, or M4A file smaller than 10 MB. The sound is copied into the app's local user-data folder. Select **Preview** to listen to it before the next session ends. Choose **Use default** to return to the system beep.
 
