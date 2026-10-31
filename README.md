@@ -2,7 +2,7 @@
 
 A lightweight Pomodoro desktop timer for Windows 11, styled as an original neon-pixel HUD. It keeps the timer readable, the controls close at hand, and your settings on your device.
 
-<a href="https://www.electronjs.org/"><img src="assets/electron-logo.svg" alt="Electron logo" width="48" height="48"></a>
+<a href="https://www.electronjs.org/"><img src="assets/electron-logo.svg" alt="Electron logo" width="96" height="96"></a>
 
 ## What it does
 
