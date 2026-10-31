@@ -45,6 +45,10 @@ function render(snapshot) {
   const isRunning = timer.status === 'running';
 
   $('#timer-value').textContent = formatTime(remaining);
+  $('#micro-time').textContent = formatTime(remaining);
+  $('#micro-mode').textContent = info.short;
+  $('#micro-play-symbol').textContent = isRunning ? 'Ⅱ' : '▶';
+  $('#micro-progress-fill').style.height = `${progress}%`;
   $('#timer-status').textContent = isRunning ? 'SESSION IN MOTION' : timer.status === 'paused' ? 'SESSION PAUSED' : 'READY WHEN YOU ARE';
   $('#session-title').textContent = info.title;
   $('#timer-caption').textContent = info.caption;
@@ -67,6 +71,10 @@ function render(snapshot) {
   $('#top-status-text').textContent = isRunning ? `${info.short} IN PROGRESS` : timer.status === 'paused' ? 'SESSION PAUSED' : 'READY TO FOCUS';
   $$('.mode-tab, .side-mode').forEach((button) => button.classList.toggle('active', button.dataset.mode === timer.mode));
   $$('.side-mode').forEach((button) => button.classList.toggle('selected', button.dataset.mode === timer.mode));
+  $$('.mini-mode-button').forEach((button) => {
+    button.classList.toggle('active', button.dataset.mode === timer.mode);
+    button.setAttribute('aria-pressed', String(button.dataset.mode === timer.mode));
+  });
   $$('[data-duration]').forEach((label) => {
     const value = state.settings[label.dataset.duration];
     label.textContent = `${String(value).padStart(2, '0')}m`;
@@ -132,13 +140,20 @@ async function toggleTimer() {
 async function doWindowAction(action) {
   try {
     const result = await window.focusTracker.windowAction(action);
-    if (action === 'compact' && typeof result === 'boolean') {
-      state.compact = result;
-      document.body.classList.toggle('compact', result);
+    if (typeof result === 'boolean') {
+      state.compact = action === 'compact' ? result : false;
+      document.body.classList.toggle('compact', state.compact);
+      document.body.classList.toggle('micro', action === 'micro' && result);
     }
   } catch {
     showToast('WINDOW ACTION UNAVAILABLE');
   }
+}
+
+async function cycleMode() {
+  const modes = ['focus', 'shortBreak', 'longBreak'];
+  const currentIndex = modes.indexOf(state.timer?.mode);
+  await command('mode', modes[(currentIndex + 1) % modes.length]);
 }
 
 async function chooseAlertSound() {
@@ -219,6 +234,9 @@ function bindInteractions() {
       'save-settings': saveSettings,
       'choose-sound': chooseAlertSound,
       'preview-sound': previewAlertSound,
+      expand: () => doWindowAction('expand'),
+      micro: () => doWindowAction('micro'),
+      'cycle-mode': cycleMode,
       'reset-sound': resetAlertSound,
       minimize: () => doWindowAction('minimize'),
       close: () => doWindowAction('hide'),

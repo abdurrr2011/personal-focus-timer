@@ -224,21 +224,112 @@ kbd { border: 1px solid #36505a; padding: 2px 4px; color: #adc1c2; font: inherit
 .save-button span { font-size: 12px; }
 .toast { position: fixed; z-index: 20; left: 50%; bottom: 23px; transform: translate(-50%,15px); padding: 10px 15px; border: 1px solid rgba(112,242,161,.5); background: #10251d; color: #d5f7df; font: 9px var(--pixel-font); letter-spacing: .2px; opacity: 0; pointer-events: none; transition: .2s ease; }
 .toast.visible { transform: translate(-50%,0); opacity: 1; }
+.mini-header, .micro-hud { display: none; }
+.mini-mode-rail, .mini-expand { display: none; }
 body.compact .app-shell { min-height: 0; grid-template-columns: 1fr; }
-body.compact .sidebar, body.compact .page-heading, body.compact .insight-column, body.compact .cycle-panel, body.compact .mode-tabs, body.compact .page-footer { display: none; }
-body.compact .workspace-scroll { padding: 10px 14px; overflow: hidden; }
+body.compact .sidebar, body.compact .page-heading, body.compact .insight-column, body.compact .cycle-panel, body.compact .mode-tabs, body.compact .page-footer, body.compact .titlebar { display: none; }
+body.compact .mini-header { height: 31px; min-height: 31px; display: flex; align-items: center; justify-content: space-between; padding: 0 7px 0 10px; border-bottom: 1px solid #18333d; background: #09161e; -webkit-app-region: drag; }
+body.compact .mini-brand, body.compact .mini-header-actions { display: flex; align-items: center; }
+body.compact .mini-brand { gap: 6px; color: #dce8e7; font: 8px var(--pixel-font); letter-spacing: .1px; -webkit-app-region: drag; }
+body.compact .mini-brand img { width: 20px; height: 20px; image-rendering: pixelated; }
+body.compact .mini-header-actions { gap: 1px; -webkit-app-region: no-drag; }
+body.compact .mini-header-actions .icon-button, body.compact .mini-header-actions .window-button { width: 25px; height: 25px; }
+body.compact .mini-header-actions .icon-button { font-size: 13px; }
+body.compact .mini-header-actions .gear-glyph { font-size: 13px; }
+body.compact .workspace-scroll { height: calc(100vh - 31px); padding: 6px 8px 7px; overflow: hidden; }
 body.compact .dashboard-grid { display: block; }
-body.compact .timer-panel { min-height: 0; height: 313px; margin: 0; padding: 13px 16px 0; }
-body.compact .timer-stage { height: 193px; }
-body.compact .timer-orbit { width: 162px; height: 162px; }
-body.compact .timer-value { margin: 7px 0; font-size: 37px; }
-body.compact .timer-caption { font-size: 6px; }
-body.compact .timer-status { font-size: 6px; }
-body.compact .timer-side-note { display: none; }
-body.compact .timer-panel-footer { margin-top: 11px; }
-body.compact .titlebar { height: 39px; min-height: 39px; padding-left: 14px; }
-body.compact .breadcrumbs { font-size: 7px; }
-body.compact .top-status { font-size: 7px; }
+body.compact .timer-panel { position: relative; display: grid; grid-template-rows: minmax(0,1fr) auto auto 16px; min-height: 0; height: 151px; margin: 0; padding: 5px 8px 4px 39px; overflow: hidden; }
+body.compact .mini-mode-rail { position: absolute; inset: 0 auto 0 0; width: 32px; display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: 5px 4px; border-right: 1px solid #203a43; background: rgba(5,15,21,.4); }
+body.compact .mini-mode-button { width: 23px; height: 22px; border: 1px solid #25414b; background: #0a1820; color: #7e969d; font: 9px var(--pixel-font); cursor: pointer; }
+body.compact .mini-mode-button:hover { border-color: var(--accent); color: var(--accent); }
+body.compact .mini-mode-button.active { border-color: var(--accent); background: rgba(var(--accent-rgb),.12); color: var(--accent); box-shadow: inset 2px 0 var(--accent); }
+body.compact .timer-panel-head { display: none; }
+body.compact .timer-stage { height: 83px; min-height: 0; justify-content: center; gap: 28px; }
+body.compact .timer-orbit { width: 78px; height: 78px; flex: 0 0 auto; }
+body.compact .timer-orbit::after { inset: -4px; }
+body.compact .timer-orbit::before { inset: 3px; }
+body.compact .timer-value { margin: 5px 0; font-size: 21px; letter-spacing: -1.5px; }
+body.compact .timer-caption { font-size: 5px; letter-spacing: .15px; }
+body.compact .timer-status { font-size: 5px; letter-spacing: .25px; }
+body.compact .timer-side-note { position: static; transform: none; display: flex; min-width: 77px; }
+body.compact .target-graphic { width: 34px; height: 34px; margin: 0 0 4px 3px; }
+body.compact .target-graphic::before { inset: 5px; }
+body.compact .target-graphic::after { inset: 10px; }
+body.compact .target-graphic span { inset: 14px; }
+body.compact .target-graphic i { height: 40px; left: 16px; top: -4px; }
+body.compact .target-graphic b { width: 40px; top: 16px; left: -4px; }
+body.compact .timer-side-note .micro-label { margin-bottom: 2px; font-size: 5px; }
+body.compact .timer-side-note > strong { font-size: 6px; line-height: 1.5; }
+body.compact .note-dashes { margin-top: 2px; font-size: 6px; }
+body.compact .note-foot { display: none; }
+body.compact .pixel-progress-wrap { align-self: end; }
+body.compact .progress-meta { margin-bottom: 3px; font-size: 6px; }
+body.compact .pixel-progress { height: 5px; gap: 2px; }
+body.compact .progress-segment { height: 4px; margin-top: 0; }
+body.compact .timer-controls { grid-template-columns: 48px minmax(80px,1fr) 32px; gap: 5px; margin-top: 5px; }
+body.compact .control-primary, body.compact .control-secondary, body.compact .control-stop { height: 27px; gap: 4px; font-size: 7px; }
+body.compact .control-secondary { font-size: 6px; }
+body.compact .control-secondary > span:first-child { font-size: 13px; }
+body.compact .control-stop { max-width: none; width: 32px; }
+body.compact .timer-panel-footer { height: 16px; display: flex; align-items: end; margin-top: 0; padding-top: 2px; border: 0; font-size: 5px; }
+body.compact .timer-panel-footer > span:not(.footer-right), body.compact .footer-right { display: none; }
+body.compact .mini-expand { display: inline-flex; align-items: center; margin-left: auto; padding: 0; border: 0; background: transparent; color: #6f8991; font: 6px var(--pixel-font); cursor: pointer; }
+body.compact .mini-expand:hover { color: var(--accent); }
+body.micro .app-shell { min-height: 0; grid-template-columns: 1fr; }
+body.micro .sidebar, body.micro .titlebar, body.micro .page-heading, body.micro .mode-tabs, body.micro .dashboard-grid, body.micro .page-footer, body.micro .mini-header { display: none; }
+body.micro .workspace-scroll { height: 100vh; display: flex; align-items: center; padding: 0; overflow: hidden; }
+body.micro .micro-hud { position: relative; width: 100%; height: 100%; display: flex; align-items: center; gap: 8px; padding: 0 8px; border: 1px solid #21434f; background: linear-gradient(110deg,#081820,#0c202a); }
+body.micro .micro-expand { width: 20px; height: 25px; flex: 0 0 auto; border: 0; background: transparent; color: #7c9ba5; cursor: pointer; }
+body.micro .micro-mark { width: 22px; height: 22px; flex: 0 0 auto; image-rendering: pixelated; }
+body.micro .micro-mode { overflow: hidden; color: var(--accent); font: 7px var(--pixel-font); white-space: nowrap; text-overflow: ellipsis; }
+body.micro .micro-time { color: #e7fbf2; font: 16px var(--pixel-font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+body.micro .micro-progress { width: 5px; height: 25px; display: flex; flex: 1 1 auto; align-items: flex-end; overflow: hidden; border: 1px solid #24414b; background: #0a1921; }
+body.micro .micro-progress span { display: block; width: 100%; height: 0; background: var(--accent); transition: height .2s ease; }
+body.micro .micro-toggle, body.micro .micro-mode-switch { width: 25px; height: 27px; flex: 0 0 auto; border: 1px solid #2a4b55; background: #0a1a22; color: var(--accent); cursor: pointer; }
+body.micro .micro-toggle:hover, body.micro .micro-mode-switch:hover { border-color: var(--accent); background: rgba(var(--accent-rgb),.1); }
+body.micro .micro-toggle { font-size: 11px; }
+body.micro .micro-mode-switch { font-size: 15px; }
+body.micro #toast { display: none; }
+body.compact .settings-dialog { width: min(100%, 355px); max-height: 94vh; padding: 15px 16px; }
+body.compact .settings-intro { margin-bottom: 12px; }
+body.compact .duration-fields { gap: 5px; }
+body.compact .duration-field { padding: 7px; }
+body.compact .duration-field > span { font-size: 6px; }
+body.compact .behavior-label { margin-top: 13px; }
+body.compact .setting-toggle { min-height: 46px; }
+body.compact .settings-note { margin-top: 9px; }
+body.compact .settings-actions { margin-top: 12px; }
+@media (max-width: 290px) {
+  body.compact .mini-brand span, body.compact .mini-header-actions [data-action="open-settings"] { display: none; }
+  body.compact .timer-stage { gap: 14px; }
+}
+@media (max-width: 240px) {
+  body.micro .micro-hud { gap: 5px; padding: 0 4px; }
+  body.micro .micro-expand { width: 18px; }
+  body.micro .micro-mark { width: 20px; height: 20px; }
+  body.micro .micro-mode { display: none; }
+  body.micro .micro-progress { flex-basis: 5px; }
+  body.micro .micro-toggle, body.micro .micro-mode-switch { width: 22px; }
+}
+@media (max-height: 150px) {
+  body.compact .mini-header { height: 25px; min-height: 25px; }
+  body.compact .workspace-scroll { height: calc(100vh - 25px); padding: 3px 5px; }
+  body.compact .timer-panel { height: 91px; grid-template-rows: minmax(0,1fr) auto; padding: 2px 5px 3px 31px; }
+  body.compact .mini-mode-rail { width: 26px; gap: 2px; padding: 3px 2px; }
+  body.compact .mini-mode-button { width: 20px; height: 18px; font-size: 7px; }
+  body.compact .timer-stage { height: 39px; gap: 7px; }
+  body.compact .timer-orbit { width: 39px; height: 39px; }
+  body.compact .timer-orbit::before { inset: 2px; }
+  body.compact .timer-orbit::after { inset: -2px; }
+  body.compact .timer-value { margin: 2px 0; font-size: 11px; letter-spacing: -.5px; }
+  body.compact .timer-status, body.compact .timer-caption { display: none; }
+  body.compact .timer-side-note { display: none; }
+  body.compact .pixel-progress-wrap { display: none; }
+  body.compact .timer-controls { grid-template-columns: 38px minmax(65px,1fr) 28px; gap: 3px; margin-top: 1px; }
+  body.compact .control-primary, body.compact .control-secondary, body.compact .control-stop { height: 23px; font-size: 6px; }
+  body.compact .control-stop { width: 28px; }
+  body.compact .timer-panel-footer { display: none; }
+}
 @media (max-width: 1120px) {
   .workspace-scroll { padding-right: 22px; padding-left: 22px; }
   .dashboard-grid { grid-template-columns: minmax(420px,1fr) 190px; gap: 12px; }

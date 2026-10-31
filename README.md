@@ -10,7 +10,7 @@
 - Focus, short-break, and long-break sessions, with a configurable long break after 2–8 completed focus sessions (four by default).
 - Start, pause, resume, reset, and switch session type; session totals and cycle progress are saved.
 - Deadline-based countdowns continue accurately when the window is hidden, the PC is busy, or the app is reopened.
-- Frameless, draggable window; optional always-on-top; compact floating mode.
+- Frameless, draggable window; optional always-on-top; compact HUD (375×195, minimum 242×125) and micro timer strip (320×52, minimum 208×38), each with an expand control to return to the dashboard.
 - Windows desktop notifications, optional completion sound (system beep or a custom WAV, MP3, OGG, or M4A file), system-tray controls, and optional launch at sign-in.
 - Settings are written locally to the app's user-data folder. No network requests, accounts, analytics, or cloud sync.
 
@@ -50,7 +50,7 @@ npm start -- --remote-debugging-port=9224
 npm run smoke
 ```
 
-The smoke test exercises start, countdown, pause, reset, mode selection, preferences, and compact mode. It leaves the development data under `FocusTracker-Smoke` so normal app preferences are untouched.
+The smoke test exercises start, countdown, pause, reset, mode selection, preferences, and switching between compact, micro, and dashboard layouts while a timer runs. It leaves the development data under `FocusTracker-Smoke` so normal app preferences are untouched.
 
 Build output goes to `release/`. `npm run dist` uses electron-builder to package Electron and produce an NSIS setup executable. CI runs the same checks and uploads the installer as a build artifact.
 
@@ -60,7 +60,8 @@ Build output goes to `release/`. `npm run dist` uses electron-builder to package
 - **Reset:** the reset button or `R`.
 - **Stop:** the square button resets the active session; it does not count as completed.
 - **Change mode:** select Focus, Short Break, or Long Break. Selecting a mode resets the timer to that mode's configured length.
-- **Compact mode:** use the title-bar compact icon for a smaller floating timer.
+- **Compact HUD:** use the title-bar compact icon for a 375 × 195 floating timer; use **Expand** to return to the dashboard. The compact window can shrink to 242 × 125.
+- **Micro timer:** use the adjacent title-bar icon for a slim 320 × 52 timer strip with start/pause and mode controls; it can shrink to 208 × 38. Expand returns to the dashboard without interrupting the timer.
 - **Always on top:** enabled by default; turn it off in Preferences.
 - **Close button:** hides the window to the system tray so an active timer is not lost. Use the tray menu's **Quit Focus Tracker** to exit.
 - **Start with Windows:** available in the installed Windows app. It is disabled when running from source because a development checkout is not a stable sign-in target.

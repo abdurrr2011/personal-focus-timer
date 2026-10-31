@@ -45,6 +45,7 @@
         <div class="titlebar-actions">
           <span class="top-status"><span class="live-dot"></span><span id="top-status-text">READY TO FOCUS</span></span>
           <button class="icon-button" type="button" data-action="compact" title="Toggle compact mode" aria-label="Toggle compact mode"><span class="compact-glyph">▤</span></button>
+          <button class="icon-button" type="button" data-action="micro" title="Switch to micro timer" aria-label="Switch to micro timer"><span class="micro-glyph">━</span></button>
           <button class="icon-button" type="button" data-action="open-settings" title="Settings" aria-label="Open settings"><span class="gear-glyph">⚙</span></button>
           <span class="titlebar-divider"></span>
           <button class="window-button" type="button" data-action="minimize" title="Minimize" aria-label="Minimize window">—</button>
@@ -53,6 +54,25 @@
       </header>
 
       <div class="workspace-scroll">
+        <section class="mini-header">
+          <div class="mini-brand"><img src="../assets/focus-mark.png" alt="" draggable="false"><span>FOCUS TRACKER</span></div>
+          <div class="mini-header-actions">
+            <button class="icon-button" type="button" data-action="expand" title="Expand dashboard" aria-label="Expand dashboard"><span class="expand-glyph">⤢</span></button>
+            <button class="icon-button" type="button" data-action="micro" title="Switch to micro timer" aria-label="Switch to micro timer"><span class="micro-glyph">━</span></button>
+            <button class="icon-button" type="button" data-action="open-settings" title="Settings" aria-label="Open settings"><span class="gear-glyph">⚙</span></button>
+            <button class="window-button" type="button" data-action="minimize" title="Minimize" aria-label="Minimize window">—</button>
+            <button class="window-button close-button" type="button" data-action="close" title="Hide to tray" aria-label="Hide to system tray">×</button>
+          </div>
+        </section>
+        <section class="micro-hud" aria-label="Mini timer">
+          <button class="micro-expand" type="button" data-action="expand" title="Expand timer" aria-label="Expand timer">⤢</button>
+          <img class="micro-mark" src="../assets/focus-mark.png" alt="" draggable="false">
+          <span class="micro-mode" id="micro-mode">FOCUS</span>
+          <strong class="micro-time" id="micro-time">25:00</strong>
+          <div class="micro-progress" aria-hidden="true"><span id="micro-progress-fill"></span></div>
+          <button class="micro-toggle" type="button" data-action="toggle-timer" title="Start or pause timer" aria-label="Start or pause timer"><span id="micro-play-symbol">▶</span></button>
+          <button class="micro-mode-switch" type="button" data-action="cycle-mode" title="Change session mode" aria-label="Change session mode">↻</button>
+        </section>
         <section class="page-heading">
           <div><div class="eyebrow"><span class="eyebrow-square"></span>YOUR PERSONAL FOCUS HUD</div><h1>Make room for <span>deep work.</span></h1><p>One clear session at a time. Find your rhythm and stay with it.</p></div>
           <div class="clock-block"><span class="clock-label">LOCAL TIME</span><strong id="local-time">--:--</strong><span id="local-date">—</span></div>
@@ -68,6 +88,11 @@
 
             <section class="timer-panel" aria-label="Timer">
               <div class="panel-corner corner-tl"></div><div class="panel-corner corner-br"></div>
+              <div class="mini-mode-rail" role="group" aria-label="Choose timer mode">
+                <button class="mini-mode-button" type="button" data-mode="focus" aria-label="Focus session" title="Focus">F</button>
+                <button class="mini-mode-button" type="button" data-mode="shortBreak" aria-label="Short break" title="Short break">S</button>
+                <button class="mini-mode-button" type="button" data-mode="longBreak" aria-label="Long break" title="Long break">L</button>
+              </div>
               <div class="timer-panel-head"><div><span class="panel-kicker">CURRENT SESSION</span><div class="session-name-row"><span class="session-indicator" id="session-indicator"></span><h2 id="session-title">FOCUS SESSION</h2></div></div><div class="session-counter"><span>SESSION</span><strong id="session-number">01</strong></div></div>
               <div class="timer-stage">
                 <div class="timer-orbit" id="timer-orbit">
@@ -81,7 +106,7 @@
                 <button class="control-primary" type="button" data-action="toggle-timer"><span class="play-symbol" id="play-symbol" aria-hidden="true">▶</span><span id="toggle-label">START FOCUS</span></button>
                 <button class="control-stop" type="button" data-action="stop" title="Stop and return to the start of this session" aria-label="Stop timer"><span>■</span></button>
               </div>
-              <div class="timer-panel-footer"><span><kbd>SPACE</kbd> START / PAUSE</span><span><kbd>R</kbd> RESET</span><span class="footer-right"><span class="footer-dot"></span> TIMER RUNS IN BACKGROUND</span></div>
+              <div class="timer-panel-footer"><span><kbd>SPACE</kbd> START / PAUSE</span><span><kbd>R</kbd> RESET</span><span class="footer-right"><span class="footer-dot"></span> TIMER RUNS IN BACKGROUND</span><button class="mini-expand" type="button" data-action="expand" title="Return to full dashboard">EXPAND ↗</button></div>
             </section>
 
             <section class="cycle-panel" aria-label="Current focus cycle">

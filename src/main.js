@@ -39,6 +39,7 @@ let timerState = null;
 let tickHandle = null;
 let shouldQuit = false;
 let compactMode = false;
+let microMode = false;
 let expiredWhileClosed = false;
 let expiredModeWhileClosed = 'focus';
 let startupCompletionPending = false;
@@ -161,14 +162,38 @@ function showWindow() {
 function toggleCompactMode() {
   if (!mainWindow) return compactMode;
   compactMode = !compactMode;
+  microMode = false;
   if (compactMode) {
-    mainWindow.setMinimumSize(470, 360);
-    mainWindow.setSize(510, 390, true);
+    mainWindow.setMinimumSize(242, 125);
+    mainWindow.setSize(375, 195, true);
   } else {
     mainWindow.setMinimumSize(900, 640);
     mainWindow.setSize(1160, 740, true);
   }
   return compactMode;
+}
+
+function toggleMicroMode() {
+  if (!mainWindow) return microMode;
+  microMode = !microMode;
+  compactMode = false;
+  if (microMode) {
+    mainWindow.setMinimumSize(208, 38);
+    mainWindow.setSize(320, 52, true);
+  } else {
+    mainWindow.setMinimumSize(900, 640);
+    mainWindow.setSize(1160, 740, true);
+  }
+  return microMode;
+}
+
+function expandDashboard() {
+  if (!mainWindow) return false;
+  compactMode = false;
+  microMode = false;
+  mainWindow.setMinimumSize(900, 640);
+  mainWindow.setSize(1160, 740, true);
+  return true;
 }
 
 function createWindow() {
@@ -284,6 +309,8 @@ function registerIpc() {
     if (action === 'minimize') mainWindow?.minimize();
     else if (action === 'hide') mainWindow?.hide();
     else if (action === 'compact') return toggleCompactMode();
+    else if (action === 'micro') return toggleMicroMode();
+    else if (action === 'expand') return expandDashboard();
     else throw new RangeError('Unknown window action');
     return true;
   });
