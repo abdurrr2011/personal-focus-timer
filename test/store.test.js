@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { createStore, sanitizeSettings } = require('../src/store');
+const { createStore, sanitizeSettings, sanitizeActivity } = require('../src/store');
 
 function withStore(run) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'focus-tracker-'));
@@ -16,6 +16,26 @@ test('a missing settings file loads usable defaults', () => {
     assert.equal(data.settings.focusMinutes, 25);
     assert.equal(data.settings.alwaysOnTop, true);
     assert.equal(data.timer, null);
+    assert.deepEqual(data.activity, {});
+  });
+});
+
+test('daily focus activity survives a store reload', () => {
+  withStore((store) => {
+    const activity = { '2026-10-31': { completedSessions: 3, focusMinutes: 75 } };
+    store.save({ settings: {}, activity });
+    assert.deepEqual(createStore(store.directory).load().activity, activity);
+  });
+});
+
+test('malformed daily activity is ignored and valid totals are sanitized', () => {
+  assert.deepEqual(sanitizeActivity({
+    '2026-02-30': { completedSessions: 1, focusMinutes: 25 },
+    'not-a-date': { completedSessions: 2, focusMinutes: 50 },
+    '2026-10-31': { completedSessions: '1', focusMinutes: 25 },
+    '2026-10-30': { completedSessions: 2, focusMinutes: 50 },
+  }), {
+    '2026-10-30': { completedSessions: 2, focusMinutes: 50 },
   });
 });
 

@@ -1,9 +1,10 @@
 const MODE_INFO = {
-  focus: { title: 'FOCUS SESSION', short: 'FOCUS', caption: 'TIME TO MAKE IT COUNT', color: 'focus' },
-  shortBreak: { title: 'SHORT BREAK', short: 'SHORT BREAK', caption: 'REST. RESET. RECHARGE.', color: 'break' },
-  longBreak: { title: 'LONG BREAK', short: 'LONG BREAK', caption: 'SLOW DOWN. BREATHE. RESET.', color: 'long-break' },
+  focus: { label: 'Focus Session', short: 'FOCUS', running: 'Focusing' },
+  shortBreak: { label: 'Short Break', short: 'SHORT BREAK', running: 'On a short break' },
+  longBreak: { label: 'Long Break', short: 'LONG BREAK', running: 'On a long break' },
 };
-const state = { timer: null, settings: null, toastTimeout: null, compact: false, previewAudio: null };
+const VIEW_TITLES = { timer: 'Timer', statistics: 'Statistics', settings: 'Settings' };
+const state = { timer: null, settings: null, statistics: null, toastTimeout: null, currentView: 'timer', previewAudio: null };
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -12,23 +13,56 @@ function formatTime(milliseconds) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function formatMinutes(minutes) {
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+}
+
 function durationForCurrentMode() {
   const key = { focus: 'focusMinutes', shortBreak: 'shortBreakMinutes', longBreak: 'longBreakMinutes' }[state.timer.mode];
   return (state.settings?.[key] || 25) * 60_000;
 }
 
+function renderStatistics(statistics = {}) {
+  $('#stat-completed').textContent = String(statistics.completedToday || 0);
+  $('#stat-today-time').textContent = formatMinutes(statistics.focusMinutesToday || 0);
+  $('#stat-total-time').textContent = formatMinutes(statistics.totalFocusMinutes || 0);
+  $('#stat-streak').textContent = String(statistics.streakDays || 0);
+
+  const week = Array.isArray(statistics.week) ? statistics.week : [];
+  const weeklyTotal = week.reduce((total, day) => total + day.focusMinutes, 0);
+  $('#weekly-total').textContent = formatMinutes(weeklyTotal);
+  const maxMinutes = Math.max(60, ...week.map((day) => day.focusMinutes));
+  $('#weekly-chart').replaceChildren(...week.map((day) => {
+    const item = document.createElement('div');
+    item.className = `weekly-day${day.isToday ? ' today' : ''}`;
+    item.setAttribute('role', 'listitem');
+    item.setAttribute('aria-label', `${day.label}, ${formatMinutes(day.focusMinutes)}`);
+    const barArea = document.createElement('div');
+    barArea.className = 'weekly-bar-area';
+    const bar = document.createElement('div');
+    bar.className = 'weekly-bar';
+    bar.style.setProperty('--bar-height', `${day.focusMinutes ? Math.max(4, day.focusMinutes / maxMinutes * 100) : 0}%`);
+    bar.title = `${day.label}: ${formatMinutes(day.focusMinutes)}`;
+    barArea.append(bar);
+    const label = document.createElement('span');
+    label.className = 'weekly-day-label';
+    label.textContent = day.label;
+    item.append(barArea, label);
+    return item;
+  }));
+}
+
 function render(snapshot) {
   if (!snapshot?.timer || !snapshot?.settings) return;
-  const windowMode = snapshot.runtime?.windowMode;
-  if (windowMode) {
-    state.compact = windowMode === 'compact';
-    document.body.classList.toggle('compact', state.compact);
-    document.body.classList.toggle('micro', windowMode === 'micro');
-  }
+  document.body.classList.toggle('micro', snapshot.runtime?.windowMode === 'micro');
   const previousSoundUrl = state.settings?.soundAlertUrl;
   state.timer = snapshot.timer;
   state.settings = snapshot.settings;
   if (previousSoundUrl !== state.settings.soundAlertUrl) stopSoundPreview();
+
   const previewButton = $('#preview-sound');
   if (previewButton) previewButton.disabled = !state.settings.soundAlertUrl;
   const soundFileLabel = $('#sound-file-label');
@@ -38,53 +72,40 @@ function render(snapshot) {
   const packaged = Boolean(snapshot.runtime?.packaged);
   startupInput.disabled = !packaged;
   startupSetting.classList.toggle('is-disabled', !packaged);
-  startupSetting.querySelector('small').textContent = packaged ? 'Open Focus Tracker when you sign in.' : 'Available in the installed Windows app.';
+  startupSetting.querySelector('small').textContent = packaged ? 'Open Focus Tracker when you sign in.' : 'Available in the installed app.';
+
   const timer = state.timer;
   const info = MODE_INFO[timer.mode] || MODE_INFO.focus;
-  document.body.classList.remove('break-mode', 'long-break-mode');
-  if (timer.mode !== 'focus') document.body.classList.add(`${info.color}-mode`);
-
+  document.body.classList.toggle('break-mode', timer.mode === 'shortBreak');
+  document.body.classList.toggle('long-break-mode', timer.mode === 'longBreak');
   const remaining = Math.max(0, timer.remainingMs);
   const duration = durationForCurrentMode();
   const progress = Math.min(100, Math.max(0, (1 - remaining / duration) * 100));
   const percentage = Math.floor(progress);
   const isRunning = timer.status === 'running';
+  const statusText = isRunning ? info.running : timer.status === 'paused' ? 'Paused' : 'Ready';
+  document.body.classList.toggle('timer-running', isRunning);
 
   $('#timer-value').textContent = formatTime(remaining);
   $('#micro-time').textContent = formatTime(remaining);
   $('#micro-mode').textContent = info.short;
   $('#micro-play-symbol').textContent = isRunning ? 'Ⅱ' : '▶';
   $('#micro-progress-fill').style.height = `${progress}%`;
-  $('#timer-status').textContent = isRunning ? 'SESSION IN MOTION' : timer.status === 'paused' ? 'SESSION PAUSED' : 'READY WHEN YOU ARE';
-  $('#session-title').textContent = info.title;
-  $('#timer-caption').textContent = info.caption;
-  $('#session-indicator').classList.toggle('is-running', isRunning);
-  $('#session-number').textContent = String(timer.completedSessions + 1).padStart(2, '0');
-  $('#total-sessions').textContent = String(timer.completedSessions).padStart(2, '0');
-  $('#timer-orbit').style.setProperty('--progress', `${progress}%`);
+  $('#timer-status').textContent = statusText;
+  $('#top-status-text').textContent = statusText;
+  $('#progress-mode-label').textContent = info.label;
   $('#progress-percent').textContent = `${percentage}%`;
   $('#pixel-progress').setAttribute('aria-valuenow', String(percentage));
-
-  const filledSegments = Math.round(progress / 100 * 32);
-  $$('.progress-segment').forEach((segment, index) => segment.classList.toggle('filled', index < filledSegments));
-  const cycleLength = state.settings.sessionsUntilLongBreak;
-  const cycle = timer.focusInCycle % cycleLength;
-  $('#cycle-label').textContent = `${cycle} of ${cycleLength} focus sessions complete`;
-  $('#cycle-blocks').innerHTML = Array.from({ length: cycleLength }, (_, index) => `<span class="cycle-unit${index < cycle ? ' done' : ''}" aria-label="Focus session ${index + 1}${index < cycle ? ' completed' : ' upcoming'}">${index < cycle ? '✓' : `0${index + 1}`}</span>`).join('');
-  $('#next-break-label').textContent = timer.mode === 'focus' && cycle === cycleLength - 1 ? 'LONG BREAK' : timer.mode === 'focus' ? 'SHORT BREAK' : 'FOCUS SESSION';
+  $('#progress-fill').style.width = `${progress}%`;
   $('#play-symbol').textContent = isRunning ? 'Ⅱ' : '▶';
-  $('#toggle-label').textContent = isRunning ? 'PAUSE SESSION' : timer.status === 'paused' ? `RESUME ${info.short}` : `START ${info.short}`;
-  $('#top-status-text').textContent = isRunning ? `${info.short} IN PROGRESS` : timer.status === 'paused' ? 'SESSION PAUSED' : 'READY TO FOCUS';
-  $$('.mode-tab, .side-mode').forEach((button) => button.classList.toggle('active', button.dataset.mode === timer.mode));
-  $$('.side-mode').forEach((button) => button.classList.toggle('selected', button.dataset.mode === timer.mode));
-  $$('.mini-mode-button').forEach((button) => {
-    button.classList.toggle('active', button.dataset.mode === timer.mode);
-    button.setAttribute('aria-pressed', String(button.dataset.mode === timer.mode));
+  $('#toggle-label').textContent = isRunning ? 'Pause' : timer.status === 'paused' ? 'Resume' : timer.mode === 'focus' ? 'Start Focus' : 'Start Break';
+  $$('[data-mode]').forEach((button) => {
+    const selected = button.dataset.mode === timer.mode;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
   });
-  $$('[data-duration]').forEach((label) => {
-    const value = state.settings[label.dataset.duration];
-    label.textContent = `${String(value).padStart(2, '0')}m`;
-  });
+  state.statistics = snapshot.statistics;
+  if (state.currentView === 'statistics') renderStatistics(state.statistics);
 }
 
 function showToast(message) {
@@ -95,35 +116,47 @@ function showToast(message) {
   state.toastTimeout = setTimeout(() => toast.classList.remove('visible'), 2800);
 }
 
-function openSettings() {
-  if (!state.settings) return;
-  const modal = $('#settings-modal');
-  for (const [key, value] of Object.entries(state.settings)) {
-    const input = modal.querySelector(`[name="${key}"]`);
-    if (input) input.type === 'checkbox' ? input.checked = value : input.value = String(value);
+function selectView(view) {
+  if (!Object.hasOwn(VIEW_TITLES, view)) return;
+  state.currentView = view;
+  for (const [name, title] of Object.entries(VIEW_TITLES)) {
+    const panel = $(`#view-${name}`);
+    panel.hidden = name !== view;
+    const button = $(`[data-view="${name}"]`);
+    button.classList.toggle('active', name === view);
+    button.setAttribute('aria-pressed', String(name === view));
+    if (name === view) $('#view-title').textContent = title;
   }
-  modal.hidden = false;
-  modal.querySelector('input').focus();
+  if (view === 'settings') populateSettings();
+  if (view === 'statistics') renderStatistics(state.statistics);
 }
 
-function closeSettings() {
-  stopSoundPreview();
-  $('#settings-modal').hidden = true;
+function populateSettings() {
+  if (!state.settings) return;
+  const form = $('#preferences-form');
+  for (const [key, value] of Object.entries(state.settings)) {
+    const input = form.elements.namedItem(key);
+    if (!input) continue;
+    if (input.type === 'checkbox') input.checked = value;
+    else input.value = String(value);
+  }
 }
 
 async function saveSettings() {
-  const form = $('#settings-modal');
+  const form = $('#preferences-form');
+  if (!form.reportValidity()) return;
   const values = {};
   for (const input of form.querySelectorAll('input[name]')) {
-    values[input.name] = input.type === 'checkbox' ? input.checked : Math.min(120, Math.max(1, Number.parseInt(input.value, 10) || 1));
+    values[input.name] = input.type === 'checkbox' ? input.checked : Number.parseInt(input.value, 10);
   }
   try {
     const snapshot = await window.focusTracker.saveSettings(values);
     render(snapshot);
-    closeSettings();
-    showToast('SETTINGS SAVED ON THIS DEVICE');
-  } catch {
-    showToast('COULD NOT SAVE SETTINGS');
+    populateSettings();
+    showToast('Settings saved on this device.');
+  } catch (error) {
+    console.error('Could not save settings:', error);
+    showToast('Could not save settings.');
   }
 }
 
@@ -131,8 +164,11 @@ async function command(action, value) {
   try {
     const snapshot = await window.focusTracker.command(action, value);
     if (snapshot) render(snapshot);
-  } catch {
-    showToast('THAT ACTION COULD NOT BE COMPLETED');
+    return snapshot || null;
+  } catch (error) {
+    console.error(`Timer action "${action}" failed:`, error);
+    showToast('That action could not be completed.');
+    return null;
   }
 }
 
@@ -146,13 +182,10 @@ async function toggleTimer() {
 async function doWindowAction(action) {
   try {
     const result = await window.focusTracker.windowAction(action);
-    if (typeof result === 'boolean') {
-      state.compact = action === 'compact' ? result : false;
-      document.body.classList.toggle('compact', state.compact);
-      document.body.classList.toggle('micro', action === 'micro' && result);
-    }
-  } catch {
-    showToast('WINDOW ACTION UNAVAILABLE');
+    if (result) document.body.classList.toggle('micro', action === 'micro');
+  } catch (error) {
+    console.error(`Window action "${action}" failed:`, error);
+    showToast('Window action unavailable.');
   }
 }
 
@@ -167,10 +200,10 @@ async function chooseAlertSound() {
     const snapshot = await window.focusTracker.chooseAlertSound();
     if (!snapshot) return;
     render(snapshot);
-    showToast('CUSTOM ALERT SOUND SAVED');
+    showToast('Custom alert sound saved.');
   } catch (error) {
     console.error('Could not select alert sound:', error);
-    showToast('COULD NOT SELECT ALERT SOUND');
+    showToast('Could not select alert sound.');
   }
 }
 
@@ -178,10 +211,10 @@ async function resetAlertSound() {
   try {
     const snapshot = await window.focusTracker.resetAlertSound();
     render(snapshot);
-    showToast('BUILT-IN MP3 RESTORED');
+    showToast('Built-in MP3 restored.');
   } catch (error) {
     console.error('Could not restore the built-in MP3 alert:', error);
-    showToast('COULD NOT RESTORE BUILT-IN MP3');
+    showToast('Could not restore built-in MP3.');
   }
 }
 
@@ -194,10 +227,9 @@ function stopSoundPreview() {
 function previewAlertSound() {
   const soundUrl = state.settings?.soundAlertUrl;
   if (!soundUrl) {
-    showToast('DEFAULT ALERT SOUND IS UNAVAILABLE');
+    showToast('Default alert sound is unavailable.');
     return;
   }
-
   stopSoundPreview();
   const audio = new Audio(soundUrl);
   state.previewAudio = audio;
@@ -207,7 +239,7 @@ function previewAlertSound() {
   audio.play().catch((error) => {
     if (state.previewAudio === audio) state.previewAudio = null;
     console.error('Alert sound preview failed:', error);
-    showToast('COULD NOT PLAY ALERT SOUND');
+    showToast('Could not play alert sound.');
   });
 }
 
@@ -218,12 +250,12 @@ function playCompletionSound(snapshot) {
 }
 
 function bindInteractions() {
-  $('#pixel-progress').replaceChildren(...Array.from({ length: 32 }, () => {
-    const segment = document.createElement('span');
-    segment.className = 'progress-segment';
-    return segment;
-  }));
   document.addEventListener('click', (event) => {
+    const viewButton = event.target.closest('[data-view]');
+    if (viewButton) {
+      selectView(viewButton.dataset.view);
+      return;
+    }
     const modeButton = event.target.closest('[data-mode]');
     if (modeButton) {
       command('mode', modeButton.dataset.mode);
@@ -234,13 +266,10 @@ function bindInteractions() {
     const actions = {
       'toggle-timer': toggleTimer,
       reset: () => command('reset'),
-      stop: () => { command('reset'); showToast('SESSION STOPPED'); },
-      'open-settings': openSettings,
-      'close-settings': closeSettings,
+      stop: async () => { if (await command('reset')) showToast('Session stopped and reset.'); },
       'save-settings': saveSettings,
       'choose-sound': chooseAlertSound,
       'preview-sound': previewAlertSound,
-      compact: () => doWindowAction('compact'),
       expand: () => doWindowAction('expand'),
       micro: () => doWindowAction('micro'),
       'cycle-mode': cycleMode,
@@ -251,14 +280,9 @@ function bindInteractions() {
     actions[actionButton.dataset.action]?.();
   });
 
-  $('#settings-modal').addEventListener('click', (event) => {
-    if (event.target === $('#settings-modal')) closeSettings();
-  });
   document.addEventListener('keydown', (event) => {
-    const modalOpen = !$('#settings-modal').hidden;
     const isTyping = event.target.matches('input, textarea, select, [contenteditable="true"]');
-    if (event.key === 'Escape' && modalOpen) closeSettings();
-    if (modalOpen || isTyping || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (isTyping || event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.code === 'Space') { event.preventDefault(); toggleTimer(); }
     if (event.key.toLowerCase() === 'r') command('reset');
   });
@@ -268,26 +292,20 @@ function bindInteractions() {
     render(snapshot);
     playCompletionSound(snapshot);
     const completedMode = snapshot.completedMode || snapshot.timer.mode;
-    const completedLabel = completedMode === 'longBreak' ? 'LONG BREAK' : completedMode === 'shortBreak' ? 'SHORT BREAK' : 'FOCUS';
-    showToast(`${completedLabel} COMPLETE — ${completedMode === 'focus' ? 'TIME FOR A BREAK' : 'TIME TO FOCUS'}`);
+    const completedLabel = completedMode === 'longBreak' ? 'Long break' : completedMode === 'shortBreak' ? 'Short break' : 'Focus';
+    showToast(`${completedLabel} complete.`);
   });
-}
-
-function updateClock() {
-  const now = new Date();
-  $('#local-time').textContent = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
-  $('#local-date').textContent = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).format(now);
 }
 
 async function initialize() {
   bindInteractions();
-  updateClock();
-  setInterval(updateClock, 30_000);
   try {
     const snapshot = await window.focusTracker.getSnapshot();
     render(snapshot);
-  } catch {
-    showToast('COULD NOT LOAD SAVED SESSION');
+    populateSettings();
+  } catch (error) {
+    console.error('Could not load saved session:', error);
+    showToast('Could not load saved session.');
   }
 }
 

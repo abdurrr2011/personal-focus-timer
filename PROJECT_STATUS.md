@@ -1,17 +1,18 @@
 # Project status
 
-**Current stage:** Feature implementation and Windows x64 packaging are complete; final code review and commit are in progress.
+**Current stage:** Timer, statistics, and settings redesign is implemented; final build and code review are in progress.
 
 ## Milestones
 
 - [x] Inspect the supplied design reference and Windows development environment.
 - [x] Choose the stack and initialize an isolated Git repository.
 - [x] Implement and test deadline-based timer transitions and settings persistence.
-- [x] Build the neon-pixel dashboard, settings dialog, compact view, and keyboard controls.
+- [x] Build the dashboard, settings, Micro Mode, and keyboard controls.
+- [x] Add persistent daily focus history, statistics, and weekly activity chart.
 - [x] Integrate native notifications, tray controls, always-on-top, and Windows sign-in setting.
 - [x] Add documentation, Git configuration, automated tests, and Windows CI.
 - [x] Build and verify the Windows x64 NSIS installer artifact.
-- [x] Run the desktop source smoke test for timer controls, mode selection, settings, and compact mode.
+- [x] Run the desktop source smoke test for timer controls, mode selection, settings, and Micro Mode.
 - [ ] Complete the final code/build review and commit the verified release state.
 
 ## Technical decisions
@@ -25,10 +26,10 @@
 ## Verification record
 
 - **Environment inspected:** Windows 11 (build 26200), Node.js 24.18.1, npm 11.16.0, Git 2.53.0; no Rust toolchain or Python `pip` in the selected Python environment.
-- **Automated tests:** 15 Node built-in tests pass, covering timer state transitions, long-break cadence, duration bounds, persistence, corrupt data, settings sanitization, deadline-expiry edge cases, and Windows icon dimensions.
+- **Automated tests:** 27 Node built-in tests pass, covering timer state transitions, daily statistics, long-break cadence, duration bounds, persistence, corrupt data, settings sanitization, deadline-expiry edge cases, and Windows icon dimensions.
 - **Docker verification:** Node.js 24.22.2 / npm 11.19.1; `npm run check`, all 15 tests, and `npm audit` passed inside a Docker container limited to 2 CPUs and 2 GiB, with the repository mounted read-only and Linux `node_modules` isolated in a named volume.
 - **Windows installer:** `npm run dist` succeeded and produced `release/Focus-Tracker-Setup-1.0.0.exe` (121,219,039 bytes; PE `MZ` signature). The installer is unsigned.
-- **Desktop source smoke-test:** passed start/countdown/pause/reset, mode selection, settings dialog, and compact mode. The production installer has not yet been installed/launched for a separate end-to-end check.
+- **Desktop source smoke-test:** passed timer controls, mode selection, the Settings and Statistics views, and switching to Micro Mode without interrupting the timer. The production installer has not yet been installed/launched for a separate end-to-end check.
 
 ## Known limitations
 
