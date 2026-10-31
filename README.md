@@ -2,7 +2,7 @@
 
 A lightweight Pomodoro desktop timer for Windows 11, styled as an original neon-pixel HUD. It keeps the timer readable, the controls close at hand, and your settings on your device.
 
-![Focus Tracker app mark](assets/focus-mark.png)
+<a href="https://www.electronjs.org/"><img src="assets/electron-logo.svg" alt="Electron logo" width="48" height="48"></a>
 
 ## What it does
 
