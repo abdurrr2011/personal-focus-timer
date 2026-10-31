@@ -8,7 +8,7 @@
   <title>Focus Tracker</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
+<body class="compact">
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand-row">
@@ -44,8 +44,8 @@
         <div class="breadcrumbs"><span>WORKSPACE</span><i>/</i><strong>OVERVIEW</strong></div>
         <div class="titlebar-actions">
           <span class="top-status"><span class="live-dot"></span><span id="top-status-text">READY TO FOCUS</span></span>
-          <button class="icon-button" type="button" data-action="compact" title="Toggle compact mode" aria-label="Toggle compact mode"><span class="compact-glyph">▤</span></button>
-          <button class="icon-button" type="button" data-action="micro" title="Switch to micro timer" aria-label="Switch to micro timer"><span class="micro-glyph">━</span></button>
+          <button class="view-button" type="button" data-action="compact" title="Return to compact HUD" aria-label="Return to compact HUD"><span class="compact-glyph">▤</span>COMPACT HUD</button>
+          <button class="view-button" type="button" data-action="micro" title="Switch to micro mode" aria-label="Switch to micro mode"><span class="micro-glyph">━</span>MICRO MODE</button>
           <button class="icon-button" type="button" data-action="open-settings" title="Settings" aria-label="Open settings"><span class="gear-glyph">⚙</span></button>
           <span class="titlebar-divider"></span>
           <button class="window-button" type="button" data-action="minimize" title="Minimize" aria-label="Minimize window">—</button>
@@ -58,7 +58,7 @@
           <div class="mini-brand"><img src="../assets/focus-mark.png" alt="" draggable="false"><span>FOCUS TRACKER</span></div>
           <div class="mini-header-actions">
             <button class="icon-button" type="button" data-action="expand" title="Expand dashboard" aria-label="Expand dashboard"><span class="expand-glyph">⤢</span></button>
-            <button class="icon-button" type="button" data-action="micro" title="Switch to micro timer" aria-label="Switch to micro timer"><span class="micro-glyph">━</span></button>
+            <button class="mini-view-button" type="button" data-action="micro" title="Switch to micro mode" aria-label="Switch to micro mode"><span class="micro-glyph">━</span>MICRO MODE</button>
             <button class="icon-button" type="button" data-action="open-settings" title="Settings" aria-label="Open settings"><span class="gear-glyph">⚙</span></button>
             <button class="window-button" type="button" data-action="minimize" title="Minimize" aria-label="Minimize window">—</button>
             <button class="window-button close-button" type="button" data-action="close" title="Hide to tray" aria-label="Hide to system tray">×</button>
