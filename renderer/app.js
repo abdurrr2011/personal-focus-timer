@@ -32,7 +32,7 @@ function render(snapshot) {
   const previewButton = $('#preview-sound');
   if (previewButton) previewButton.disabled = !state.settings.soundAlertUrl;
   const soundFileLabel = $('#sound-file-label');
-  if (soundFileLabel) soundFileLabel.textContent = state.settings.soundAlertFile ? 'Custom sound selected' : 'System beep';
+  if (soundFileLabel) soundFileLabel.textContent = state.settings.soundAlertFile ? 'Custom sound selected' : 'Built-in MP3';
   const startupSetting = $('#launch-setting');
   const startupInput = startupSetting.querySelector('input');
   const packaged = Boolean(snapshot.runtime?.packaged);
@@ -178,10 +178,10 @@ async function resetAlertSound() {
   try {
     const snapshot = await window.focusTracker.resetAlertSound();
     render(snapshot);
-    showToast('SYSTEM BEEP RESTORED');
+    showToast('BUILT-IN MP3 RESTORED');
   } catch (error) {
-    console.error('Could not restore system alert sound:', error);
-    showToast('COULD NOT RESTORE SYSTEM BEEP');
+    console.error('Could not restore the built-in MP3 alert:', error);
+    showToast('COULD NOT RESTORE BUILT-IN MP3');
   }
 }
 
@@ -194,7 +194,7 @@ function stopSoundPreview() {
 function previewAlertSound() {
   const soundUrl = state.settings?.soundAlertUrl;
   if (!soundUrl) {
-    showToast('CHOOSE A CUSTOM SOUND FIRST');
+    showToast('DEFAULT ALERT SOUND IS UNAVAILABLE');
     return;
   }
 
@@ -214,7 +214,7 @@ function previewAlertSound() {
 function playCompletionSound(snapshot) {
   if (!snapshot.settings?.soundAlerts || !snapshot.settings.soundAlertUrl) return;
   const audio = new Audio(snapshot.settings.soundAlertUrl);
-  audio.play().catch((error) => console.error('Custom alert sound failed:', error));
+  audio.play().catch((error) => console.error('Alert sound failed:', error));
 }
 
 function bindInteractions() {

@@ -11,7 +11,7 @@
 - Start, pause, resume, reset, and switch session type; session totals and cycle progress are saved.
 - Deadline-based countdowns continue accurately when the window is hidden, the PC is busy, or the app is reopened.
 - Frameless, draggable window; optional always-on-top; starts in the compact HUD (375×195, minimum 242×125), with a labeled Micro Mode button for the 320×52 timer strip (minimum 208×38).
-- Windows desktop notifications, optional completion sound (system beep or a custom WAV, MP3, OGG, or M4A file), system-tray controls, and optional launch at sign-in.
+- Windows desktop notifications, optional completion sound (the bundled MP3 by default, or a custom WAV, MP3, OGG, or M4A file), system-tray controls, and optional launch at sign-in.
 - Settings are written locally to the app's user-data folder. No network requests, accounts, analytics, or cloud sync.
 
 ## Install the Windows app
@@ -68,7 +68,7 @@ Build output goes to `release/`. `npm run dist` uses electron-builder to package
 
 Session lengths can be configured from 1 to 120 minutes. Changing a duration resets the current session to the new configured length. Choose 2–8 focus sessions before a long break in Preferences; changing this interval starts a fresh cycle without changing your lifetime completed-session count.
 
-To use a custom completion sound, open **Preferences**, select **Choose file**, and choose a WAV, MP3, OGG, or M4A file smaller than 10 MB. The sound is copied into the app's local user-data folder. Select **Preview** to listen to it before the next session ends. Choose **Use default** to return to the system beep.
+The bundled MP3 in `assets/` is the default completion alert. Enable **Sound alert** in **Preferences** to hear it when a session ends; use **Preview** to listen at any time. To use a different sound, select **Choose file** and choose a WAV, MP3, OGG, or M4A file smaller than 10 MB. The custom sound is copied into the app's local user-data folder. Select **Use default** to restore the bundled MP3.
 
 ## Architecture
 
