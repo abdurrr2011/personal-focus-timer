@@ -30,7 +30,6 @@ const { createStore, sanitizeSettings } = require('./store');
 
 const APP_ID = 'com.focus-tracker.desktop';
 const TICK_INTERVAL_MS = 250;
-const gotLock = app.requestSingleInstanceLock();
 let mainWindow = null;
 let tray = null;
 let store = null;
@@ -38,7 +37,7 @@ let settings = { ...DEFAULT_SETTINGS };
 let timerState = null;
 let tickHandle = null;
 let shouldQuit = false;
-let compactMode = false;
+let compactMode = true;
 let microMode = false;
 let expiredWhileClosed = false;
 let expiredModeWhileClosed = 'focus';
@@ -48,6 +47,7 @@ app.setAppUserModelId(APP_ID);
 if (!app.isPackaged && process.env.FOCUS_TRACKER_USER_DATA_DIR) {
   app.setPath('userData', path.resolve(process.env.FOCUS_TRACKER_USER_DATA_DIR));
 }
+const gotLock = app.requestSingleInstanceLock();
 
 function snapshot() {
   return {
@@ -58,7 +58,11 @@ function snapshot() {
         ? pathToFileURL(path.join(app.getPath('userData'), 'sounds', settings.soundAlertFile)).href
         : null,
     },
-    runtime: { packaged: app.isPackaged, platform: process.platform },
+    runtime: {
+      packaged: app.isPackaged,
+      platform: process.platform,
+      windowMode: microMode ? 'micro' : compactMode ? 'compact' : 'dashboard',
+    },
   };
 }
 
@@ -159,32 +163,22 @@ function showWindow() {
   mainWindow.focus();
 }
 
-function toggleCompactMode() {
+function setCompactMode() {
   if (!mainWindow) return compactMode;
-  compactMode = !compactMode;
+  compactMode = true;
   microMode = false;
-  if (compactMode) {
-    mainWindow.setMinimumSize(242, 125);
-    mainWindow.setSize(375, 195, true);
-  } else {
-    mainWindow.setMinimumSize(900, 640);
-    mainWindow.setSize(1160, 740, true);
-  }
-  return compactMode;
+  mainWindow.setMinimumSize(242, 125);
+  mainWindow.setSize(375, 195, true);
+  return true;
 }
 
-function toggleMicroMode() {
+function setMicroMode() {
   if (!mainWindow) return microMode;
-  microMode = !microMode;
+  microMode = true;
   compactMode = false;
-  if (microMode) {
-    mainWindow.setMinimumSize(208, 38);
-    mainWindow.setSize(320, 52, true);
-  } else {
-    mainWindow.setMinimumSize(900, 640);
-    mainWindow.setSize(1160, 740, true);
-  }
-  return microMode;
+  mainWindow.setMinimumSize(208, 38);
+  mainWindow.setSize(320, 52, true);
+  return true;
 }
 
 function expandDashboard() {
@@ -198,10 +192,10 @@ function expandDashboard() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1160,
-    height: 740,
-    minWidth: 900,
-    minHeight: 640,
+    width: compactMode ? 375 : microMode ? 320 : 1160,
+    height: compactMode ? 195 : microMode ? 52 : 740,
+    minWidth: compactMode ? 242 : microMode ? 208 : 900,
+    minHeight: compactMode ? 125 : microMode ? 38 : 640,
     show: false,
     frame: false,
     transparent: false,
@@ -308,8 +302,8 @@ function registerIpc() {
   ipcMain.handle('window:action', (_event, action) => {
     if (action === 'minimize') mainWindow?.minimize();
     else if (action === 'hide') mainWindow?.hide();
-    else if (action === 'compact') return toggleCompactMode();
-    else if (action === 'micro') return toggleMicroMode();
+    else if (action === 'compact') return setCompactMode();
+    else if (action === 'micro') return setMicroMode();
     else if (action === 'expand') return expandDashboard();
     else throw new RangeError('Unknown window action');
     return true;

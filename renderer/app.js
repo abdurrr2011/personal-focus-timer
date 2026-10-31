@@ -19,6 +19,12 @@ function durationForCurrentMode() {
 
 function render(snapshot) {
   if (!snapshot?.timer || !snapshot?.settings) return;
+  const windowMode = snapshot.runtime?.windowMode;
+  if (windowMode) {
+    state.compact = windowMode === 'compact';
+    document.body.classList.toggle('compact', state.compact);
+    document.body.classList.toggle('micro', windowMode === 'micro');
+  }
   const previousSoundUrl = state.settings?.soundAlertUrl;
   state.timer = snapshot.timer;
   state.settings = snapshot.settings;
@@ -234,13 +240,13 @@ function bindInteractions() {
       'save-settings': saveSettings,
       'choose-sound': chooseAlertSound,
       'preview-sound': previewAlertSound,
+      compact: () => doWindowAction('compact'),
       expand: () => doWindowAction('expand'),
       micro: () => doWindowAction('micro'),
       'cycle-mode': cycleMode,
       'reset-sound': resetAlertSound,
       minimize: () => doWindowAction('minimize'),
       close: () => doWindowAction('hide'),
-      compact: () => doWindowAction('compact'),
     };
     actions[actionButton.dataset.action]?.();
   });

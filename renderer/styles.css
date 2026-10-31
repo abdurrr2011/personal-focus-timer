@@ -71,6 +71,9 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .titlebar .live-dot { width: 5px; height: 5px; }
 .icon-button, .window-button { width: 30px; height: 29px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; background: transparent; color: #88a1a9; cursor: pointer; }
 .icon-button:hover, .window-button:hover { border-color: #294650; background: #10222b; color: var(--cyan); }
+.view-button { height: 29px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border: 1px solid #294650; background: #0c1b24; color: #a9c1c5; font: 8px var(--pixel-font); letter-spacing: .2px; white-space: nowrap; cursor: pointer; }
+.view-button:hover, .mini-view-button:hover { border-color: var(--accent); color: var(--accent); }
+.view-button .compact-glyph, .view-button .micro-glyph { font-size: 13px; }
 .compact-glyph { font-size: 17px; transform: rotate(180deg); }
 .gear-glyph { font-size: 17px; }
 .titlebar-divider { width: 1px; height: 16px; background: #24414b; margin: 0 1px 0 4px; }
@@ -236,6 +239,8 @@ body.compact .mini-header-actions { gap: 1px; -webkit-app-region: no-drag; }
 body.compact .mini-header-actions .icon-button, body.compact .mini-header-actions .window-button { width: 25px; height: 25px; }
 body.compact .mini-header-actions .icon-button { font-size: 13px; }
 body.compact .mini-header-actions .gear-glyph { font-size: 13px; }
+body.compact .mini-view-button { height: 25px; display: inline-flex; align-items: center; gap: 4px; padding: 0 5px; border: 1px solid #294650; background: #0c1b24; color: #a9c1c5; font: 7px var(--pixel-font); white-space: nowrap; cursor: pointer; }
+body.compact .mini-view-button .micro-glyph { font-size: 12px; }
 body.compact .workspace-scroll { height: calc(100vh - 31px); padding: 6px 8px 7px; overflow: hidden; }
 body.compact .dashboard-grid { display: block; }
 body.compact .timer-panel { position: relative; display: grid; grid-template-rows: minmax(0,1fr) auto auto 16px; min-height: 0; height: 151px; margin: 0; padding: 5px 8px 4px 39px; overflow: hidden; }
