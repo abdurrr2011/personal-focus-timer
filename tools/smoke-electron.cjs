@@ -115,14 +115,29 @@ async function main() {
 
     await click('[data-action="compact"]');
     assert.equal(await evaluate('document.body.classList.contains("compact")'), true);
+    await click('[data-action="toggle-timer"]');
+    assert.equal(await evaluate('window.focusTracker.getSnapshot().timer.status'), 'running');
+    await click('[data-action="micro"]');
+    assert.equal(await evaluate('document.body.classList.contains("micro")'), true);
+    assert.equal(await evaluate('document.body.classList.contains("compact")'), false);
+    snapshot = await evaluate('window.focusTracker.getSnapshot()');
+    assert.equal(snapshot.timer.status, 'running');
+    await click('[data-action="expand"]');
+    assert.equal(await evaluate('document.body.classList.contains("micro")'), false);
+    assert.equal(await evaluate('document.body.classList.contains("compact")'), false);
+    assert.equal(await evaluate('window.focusTracker.getSnapshot().timer.status'), 'running');
+    await click('[data-action="compact"]');
+    assert.equal(await evaluate('document.body.classList.contains("compact")'), true);
     await click('[data-action="compact"]');
     assert.equal(await evaluate('document.body.classList.contains("compact")'), false);
+    await click('[data-action="toggle-timer"]');
+    assert.equal(await evaluate('window.focusTracker.getSnapshot().timer.status'), 'paused');
     await click('[data-mode="focus"]');
     await click('[data-action="reset"]');
     snapshot = await evaluate('window.focusTracker.getSnapshot()');
     assert.equal(snapshot.timer.mode, 'focus');
     assert.equal(snapshot.timer.status, 'idle');
-    console.log('PASS compact mode and restored clean focus state');
+    console.log('PASS compact and micro modes preserve the active timer and restore the dashboard');
   } finally {
     socket.close();
   }
