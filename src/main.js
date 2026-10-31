@@ -8,7 +8,6 @@ const {
   ipcMain,
   dialog,
   Notification,
-  shell,
   nativeImage,
   Tray,
   Menu,
@@ -30,6 +29,7 @@ const { createStore, sanitizeSettings } = require('./store');
 
 const APP_ID = 'com.focus-tracker.desktop';
 const TICK_INTERVAL_MS = 250;
+const DEFAULT_SOUND_FILE = 'faceit_accept_sound_epic_-8962405019821701368.mp3';
 let mainWindow = null;
 let tray = null;
 let store = null;
@@ -54,9 +54,9 @@ function snapshot() {
     timer: { ...timerState, remainingMs: remainingMs(timerState, Date.now()) },
     settings: {
       ...settings,
-      soundAlertUrl: settings.soundAlertFile
-        ? pathToFileURL(path.join(app.getPath('userData'), 'sounds', settings.soundAlertFile)).href
-        : null,
+      soundAlertUrl: pathToFileURL(settings.soundAlertFile
+        ? path.join(app.getPath('userData'), 'sounds', settings.soundAlertFile)
+        : path.join(__dirname, '..', 'assets', DEFAULT_SOUND_FILE)).href,
     },
     runtime: {
       packaged: app.isPackaged,
@@ -84,9 +84,6 @@ function sendSnapshot(completed = false, completedMode = null) {
 }
 
 function showCompletionNotification(previousMode) {
-  if (settings.soundAlerts && !settings.soundAlertFile) {
-    try { shell.beep(); } catch (error) { console.error('System alert tone failed:', error); }
-  }
   if (!settings.notifications || !Notification.isSupported()) return;
   const text = previousMode === 'focus'
     ? `Focus session ${timerState.completedSessions} complete. ${timerState.mode === 'longBreak' ? 'Your long break is ready.' : 'Take a short breather.'}`

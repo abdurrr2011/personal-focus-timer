@@ -59,6 +59,9 @@ async function main() {
     assert.equal(snapshot.runtime.windowMode, 'compact');
     assert.equal(await evaluate('document.body.classList.contains("compact")'), true);
     assert.equal(await evaluate('document.querySelector(\'[data-action="micro"]\').textContent.trim()'), '━MICRO MODE');
+    assert.match(snapshot.settings.soundAlertUrl, /assets\/faceit_accept_sound_epic_-8962405019821701368\.mp3$/);
+    assert.equal(await evaluate('document.querySelector("#preview-sound").disabled'), false);
+    assert.equal(await evaluate('document.querySelector("#sound-file-label").textContent'), 'Built-in MP3');
     console.log('PASS initial focus state and default always-on-top setting');
 
     await click('[data-action="toggle-timer"]');
@@ -79,7 +82,6 @@ async function main() {
     assert.equal(snapshot.timer.remainingMs, snapshot.settings.shortBreakMinutes * 60_000);
     await click('[data-action="open-settings"]');
     assert.equal(await evaluate('!document.querySelector("#settings-modal").hidden'), true);
-    assert.equal(await evaluate('document.querySelector("#preview-sound").disabled'), true);
     await evaluate(`(() => {
       window.__previewCalls = [];
       window.Audio = class {
@@ -88,6 +90,21 @@ async function main() {
         play() { this.played = true; return Promise.resolve(); }
         pause() { this.paused = true; }
       };
+      playCompletionSound({
+        settings: { ...state.settings, soundAlerts: true },
+      });
+      return true;
+    })()`);
+    await click('[data-action="preview-sound"]');
+    assert.deepEqual(await evaluate('({ source: window.__previewCalls[0].source, played: window.__previewCalls[0].played })'), {
+      source: snapshot.settings.soundAlertUrl,
+      played: true,
+    });
+    assert.deepEqual(await evaluate('({ source: window.__previewCalls[1].source, played: window.__previewCalls[1].played })'), {
+      source: snapshot.settings.soundAlertUrl,
+      played: true,
+    });
+    await evaluate(`(() => {
       render({
         timer: state.timer,
         settings: { ...state.settings, soundAlertUrl: 'file:///preview.wav' },
@@ -96,13 +113,18 @@ async function main() {
       return true;
     })()`);
     await click('[data-action="preview-sound"]');
-    assert.deepEqual(await evaluate('({ source: window.__previewCalls[0].source, played: window.__previewCalls[0].played })'), {
+    assert.deepEqual(await evaluate('({ source: window.__previewCalls[2].source, played: window.__previewCalls[2].played })'), {
       source: 'file:///preview.wav',
       played: true,
     });
+    await click('[data-action="reset-sound"]');
+    snapshot = await getSnapshot();
+    assert.equal(snapshot.settings.soundAlertFile, null);
+    assert.match(snapshot.settings.soundAlertUrl, /assets\/faceit_accept_sound_epic_-8962405019821701368\.mp3$/);
+    assert.equal(await evaluate('document.querySelector("#sound-file-label").textContent'), 'Built-in MP3');
     await click('[data-action="close-settings"]');
-    assert.equal(await evaluate('window.__previewCalls[0].paused'), true);
-    console.log('PASS reset, session mode selection, and settings dialog');
+    assert.equal(await evaluate('window.__previewCalls[2].paused'), true);
+    console.log('PASS bundled default MP3, custom preview, restore default, and settings dialog');
 
     await click('[data-action="open-settings"]');
     await evaluate(`(() => {

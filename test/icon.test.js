@@ -22,3 +22,9 @@ test('Windows icon assets provide a 256-by-256 PNG-backed ICO entry', () => {
   assert.equal(png.readUInt32BE(16), 256);
   assert.equal(png.readUInt32BE(20), 256);
 });
+
+test('the bundled default alert is an MP3 asset', () => {
+  const sound = fs.readFileSync(path.join(assets, 'faceit_accept_sound_epic_-8962405019821701368.mp3'));
+  assert.ok(sound.length > 3, 'MP3 asset must not be empty');
+  assert.equal(sound.toString('ascii', 0, 3), 'ID3', 'MP3 asset must contain an ID3 header');
+});
