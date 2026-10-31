@@ -5,6 +5,8 @@ const { DEFAULT_SETTINGS } = require('./timer');
 const BOOLEAN_KEYS = ['notifications', 'alwaysOnTop', 'soundAlerts', 'launchAtLogin'];
 const MINUTE_KEYS = ['focusMinutes', 'shortBreakMinutes', 'longBreakMinutes'];
 const SOUND_FILE_PATTERN = /^alert-[a-f0-9-]{36}\.(wav|mp3|ogg|m4a)$/i;
+const SESSIONS_UNTIL_LONG_BREAK_MIN = 2;
+const SESSIONS_UNTIL_LONG_BREAK_MAX = 8;
 
 function sanitizeSettings(input = {}) {
   const source = input && typeof input === 'object' && !Array.isArray(input) ? input : {};
@@ -12,6 +14,13 @@ function sanitizeSettings(input = {}) {
   for (const key of MINUTE_KEYS) {
     const value = Number(source[key]);
     if (Number.isFinite(value)) settings[key] = Math.min(120, Math.max(1, Math.round(value)));
+  }
+  const sessionsUntilLongBreak = Number(source.sessionsUntilLongBreak);
+  if (Number.isFinite(sessionsUntilLongBreak)) {
+    settings.sessionsUntilLongBreak = Math.min(
+      SESSIONS_UNTIL_LONG_BREAK_MAX,
+      Math.max(SESSIONS_UNTIL_LONG_BREAK_MIN, Math.round(sessionsUntilLongBreak)),
+    );
   }
   for (const key of BOOLEAN_KEYS) {
     if (typeof source[key] === 'boolean') settings[key] = source[key];

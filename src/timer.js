@@ -13,6 +13,14 @@ const DEFAULT_SETTINGS = Object.freeze({
 const MODES = Object.freeze(['focus', 'shortBreak', 'longBreak']);
 const MINUTES_MIN = 1;
 const MINUTES_MAX = 120;
+const SESSIONS_UNTIL_LONG_BREAK_MIN = 2;
+const SESSIONS_UNTIL_LONG_BREAK_MAX = 8;
+
+function sessionsUntilLongBreak(settings = DEFAULT_SETTINGS) {
+  const raw = Number(settings.sessionsUntilLongBreak);
+  const sessions = Number.isFinite(raw) ? Math.round(raw) : DEFAULT_SETTINGS.sessionsUntilLongBreak;
+  return Math.min(SESSIONS_UNTIL_LONG_BREAK_MAX, Math.max(SESSIONS_UNTIL_LONG_BREAK_MIN, sessions));
+}
 
 function durationFor(mode, settings = DEFAULT_SETTINGS) {
   const key = ({ focus: 'focusMinutes', shortBreak: 'shortBreakMinutes', longBreak: 'longBreakMinutes' })[mode];
@@ -69,7 +77,7 @@ function selectMode(state, mode, settings = DEFAULT_SETTINGS) {
 function finishSession(state, settings = DEFAULT_SETTINGS) {
   if (state.mode === 'focus') {
     const completedSessions = state.completedSessions + 1;
-    const cycleLength = Math.max(1, Number(settings.sessionsUntilLongBreak) || DEFAULT_SETTINGS.sessionsUntilLongBreak);
+    const cycleLength = sessionsUntilLongBreak(settings);
     const focusInCycle = (state.focusInCycle + 1) % cycleLength;
     const mode = focusInCycle === 0 ? 'longBreak' : 'shortBreak';
     return {
@@ -93,7 +101,7 @@ function finishSession(state, settings = DEFAULT_SETTINGS) {
 
 function restoreTimerState(saved, settings = DEFAULT_SETTINGS, now = Date.now()) {
   if (!saved || !MODES.includes(saved.mode) || !['idle', 'running', 'paused'].includes(saved.status)) return createTimerState(settings);
-  const cycleLength = Math.max(1, Number(settings.sessionsUntilLongBreak) || DEFAULT_SETTINGS.sessionsUntilLongBreak);
+  const cycleLength = sessionsUntilLongBreak(settings);
   const validCount = (value) => Number.isInteger(value) && value >= 0 ? value : 0;
   let state = {
     mode: saved.mode,

@@ -3,7 +3,6 @@ const MODE_INFO = {
   shortBreak: { title: 'SHORT BREAK', short: 'SHORT BREAK', caption: 'REST. RESET. RECHARGE.', color: 'break' },
   longBreak: { title: 'LONG BREAK', short: 'LONG BREAK', caption: 'SLOW DOWN. BREATHE. RESET.', color: 'long-break' },
 };
-const CYCLE_LENGTH = 4;
 const state = { timer: null, settings: null, toastTimeout: null, compact: false, previewAudio: null };
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -58,10 +57,11 @@ function render(snapshot) {
 
   const filledSegments = Math.round(progress / 100 * 32);
   $$('.progress-segment').forEach((segment, index) => segment.classList.toggle('filled', index < filledSegments));
-  const cycle = timer.focusInCycle % CYCLE_LENGTH;
-  $('#cycle-label').textContent = `${cycle} of ${CYCLE_LENGTH} focus sessions complete`;
-  $('#cycle-blocks').innerHTML = Array.from({ length: CYCLE_LENGTH }, (_, index) => `<span class="cycle-unit${index < cycle ? ' done' : ''}" aria-label="Focus session ${index + 1}${index < cycle ? ' completed' : ' upcoming'}">${index < cycle ? '✓' : `0${index + 1}`}</span>`).join('');
-  $('#next-break-label').textContent = timer.mode === 'focus' && cycle === CYCLE_LENGTH - 1 ? 'LONG BREAK' : timer.mode === 'focus' ? 'SHORT BREAK' : 'FOCUS SESSION';
+  const cycleLength = state.settings.sessionsUntilLongBreak;
+  const cycle = timer.focusInCycle % cycleLength;
+  $('#cycle-label').textContent = `${cycle} of ${cycleLength} focus sessions complete`;
+  $('#cycle-blocks').innerHTML = Array.from({ length: cycleLength }, (_, index) => `<span class="cycle-unit${index < cycle ? ' done' : ''}" aria-label="Focus session ${index + 1}${index < cycle ? ' completed' : ' upcoming'}">${index < cycle ? '✓' : `0${index + 1}`}</span>`).join('');
+  $('#next-break-label').textContent = timer.mode === 'focus' && cycle === cycleLength - 1 ? 'LONG BREAK' : timer.mode === 'focus' ? 'SHORT BREAK' : 'FOCUS SESSION';
   $('#play-symbol').textContent = isRunning ? 'Ⅱ' : '▶';
   $('#toggle-label').textContent = isRunning ? 'PAUSE SESSION' : timer.status === 'paused' ? `RESUME ${info.short}` : `START ${info.short}`;
   $('#top-status-text').textContent = isRunning ? `${info.short} IN PROGRESS` : timer.status === 'paused' ? 'SESSION PAUSED' : 'READY TO FOCUS';
@@ -202,13 +202,6 @@ function bindInteractions() {
     segment.className = 'progress-segment';
     return segment;
   }));
-  $('#cycle-blocks').replaceChildren(...Array.from({ length: CYCLE_LENGTH }, (_, index) => {
-    const block = document.createElement('span');
-    block.className = 'cycle-unit';
-    block.textContent = `0${index + 1}`;
-    return block;
-  }));
-
   document.addEventListener('click', (event) => {
     const modeButton = event.target.closest('[data-mode]');
     if (modeButton) {
