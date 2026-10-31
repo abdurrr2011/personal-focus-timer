@@ -4,7 +4,7 @@ const MODE_INFO = {
   longBreak: { title: 'LONG BREAK', short: 'LONG BREAK', caption: 'SLOW DOWN. BREATHE. RESET.', color: 'long-break' },
 };
 const CYCLE_LENGTH = 4;
-const state = { timer: null, settings: null, toastTimeout: null, compact: false };
+const state = { timer: null, settings: null, toastTimeout: null, compact: false, previewAudio: null };
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -20,8 +20,12 @@ function durationForCurrentMode() {
 
 function render(snapshot) {
   if (!snapshot?.timer || !snapshot?.settings) return;
+  const previousSoundUrl = state.settings?.soundAlertUrl;
   state.timer = snapshot.timer;
   state.settings = snapshot.settings;
+  if (previousSoundUrl !== state.settings.soundAlertUrl) stopSoundPreview();
+  const previewButton = $('#preview-sound');
+  if (previewButton) previewButton.disabled = !state.settings.soundAlertUrl;
   const soundFileLabel = $('#sound-file-label');
   if (soundFileLabel) soundFileLabel.textContent = state.settings.soundAlertFile ? 'Custom sound selected' : 'System beep';
   const startupSetting = $('#launch-setting');
@@ -89,6 +93,7 @@ function openSettings() {
 }
 
 function closeSettings() {
+  stopSoundPreview();
   $('#settings-modal').hidden = true;
 }
 
@@ -159,6 +164,32 @@ async function resetAlertSound() {
   }
 }
 
+function stopSoundPreview() {
+  if (!state.previewAudio) return;
+  state.previewAudio.pause();
+  state.previewAudio = null;
+}
+
+function previewAlertSound() {
+  const soundUrl = state.settings?.soundAlertUrl;
+  if (!soundUrl) {
+    showToast('CHOOSE A CUSTOM SOUND FIRST');
+    return;
+  }
+
+  stopSoundPreview();
+  const audio = new Audio(soundUrl);
+  state.previewAudio = audio;
+  audio.addEventListener('ended', () => {
+    if (state.previewAudio === audio) state.previewAudio = null;
+  }, { once: true });
+  audio.play().catch((error) => {
+    if (state.previewAudio === audio) state.previewAudio = null;
+    console.error('Alert sound preview failed:', error);
+    showToast('COULD NOT PLAY ALERT SOUND');
+  });
+}
+
 function playCompletionSound(snapshot) {
   if (!snapshot.settings?.soundAlerts || !snapshot.settings.soundAlertUrl) return;
   const audio = new Audio(snapshot.settings.soundAlertUrl);
@@ -194,6 +225,7 @@ function bindInteractions() {
       'close-settings': closeSettings,
       'save-settings': saveSettings,
       'choose-sound': chooseAlertSound,
+      'preview-sound': previewAlertSound,
       'reset-sound': resetAlertSound,
       minimize: () => doWindowAction('minimize'),
       close: () => doWindowAction('hide'),
