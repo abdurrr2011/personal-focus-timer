@@ -1,0 +1,97 @@
+# Focus Tracker
+
+A lightweight Pomodoro desktop timer for Windows 11, styled as an original neon-pixel HUD. It keeps the timer readable, the controls close at hand, and your settings on your device.
+
+![Focus Tracker app mark](assets/focus-mark.png)
+
+## What it does
+
+- Focus, short-break, and long-break sessions, with a long break after every four completed focus sessions.
+- Start, pause, resume, reset, and switch session type; session totals and cycle progress are saved.
+- Deadline-based countdowns continue accurately when the window is hidden, the PC is busy, or the app is reopened.
+- Frameless, draggable window; optional always-on-top; compact floating mode.
+- Windows desktop notifications, optional completion tone, system-tray controls, and optional launch at sign-in.
+- Settings are written locally to the app's user-data folder. No network requests, accounts, analytics, or cloud sync.
+
+## Install the Windows app
+
+Download and run `Focus-Tracker-Setup-1.0.0.exe` from the build's `release/` folder. The installer offers a choice of installation directory and adds Start-menu and desktop shortcuts. No separate Node.js installation is needed to run the installed app.
+
+The installer is currently unsigned. Windows SmartScreen may show an unknown-publisher warning; verify that the installer came from a trusted build before allowing it to run.
+
+## Develop locally
+
+Requirements: Windows 11 x64, Node.js 22.12 or newer, npm 11 or newer, and Git. The Windows installer is built on Windows; the development scripts and timer unit tests use Node.js.
+
+```powershell
+git clone <your-repository-url> focus-tracker
+cd focus-tracker
+npm ci
+npm start
+```
+
+This repository has not been published or assigned a remote. For a local checkout, skip `git clone` and run the commands from the project folder.
+
+### Checks and build
+
+```powershell
+npm run check    # syntax-check main, preload, timer, storage, and renderer code
+npm test         # unit tests for timer behavior and durable settings
+npm run dist     # checks, tests, then create the Windows x64 NSIS installer
+```
+
+For a local interactive smoke test, start Electron with a loopback-only debugging port and an isolated data folder, then run `npm run smoke` in another terminal:
+
+```powershell
+$env:FOCUS_TRACKER_USER_DATA_DIR = "$env:LOCALAPPDATA\FocusTracker-Smoke"
+npm start -- --remote-debugging-port=9224
+# In a second terminal, from the repository folder:
+npm run smoke
+```
+
+The smoke test exercises start, countdown, pause, reset, mode selection, preferences, and compact mode. It leaves the development data under `FocusTracker-Smoke` so normal app preferences are untouched.
+
+Build output goes to `release/`. `npm run dist` uses electron-builder to package Electron and produce an NSIS setup executable. CI runs the same checks and uploads the installer as a build artifact.
+
+## Using the app
+
+- **Start / pause / resume:** the main button or `Space`.
+- **Reset:** the reset button or `R`.
+- **Stop:** the square button resets the active session; it does not count as completed.
+- **Change mode:** select Focus, Short Break, or Long Break. Selecting a mode resets the timer to that mode's configured length.
+- **Compact mode:** use the title-bar compact icon for a smaller floating timer.
+- **Always on top:** enabled by default; turn it off in Preferences.
+- **Close button:** hides the window to the system tray so an active timer is not lost. Use the tray menu's **Quit Focus Tracker** to exit.
+- **Start with Windows:** available in the installed Windows app. It is disabled when running from source because a development checkout is not a stable sign-in target.
+
+Session lengths can be configured from 1 to 120 minutes. Changing a duration resets the current session to the new configured length.
+
+## Architecture
+
+- **Electron main process:** owns the timer, native notifications, tray, window behavior, and Windows sign-in integration.
+- **Renderer:** a local HTML/CSS/JavaScript dashboard with no external runtime dependencies.
+- **Preload bridge:** narrow, validated IPC surface; renderer has no Node.js access.
+- **Timer:** a deadline timestamp rather than decrementing tick counters, so missed UI frames cannot add time to the session.
+- **Persistence:** small atomic JSON file in Electron's per-user app-data folder.
+
+Electron was chosen over a Rust-based wrapper because this Windows environment has Node/npm available but no Rust toolchain. Electron provides the required native desktop features directly and avoids making users install a runtime. The UI itself has no framework dependency.
+
+## Repository map
+
+```text
+src/                 Electron main process, preload bridge, timer, storage
+renderer/            Dashboard UI and styles
+assets/              Original Focus Tracker icon assets
+ test/                Node built-in test suite
+ tools/               Icon-generation utility (Python standard library)
+ .github/workflows/   Windows CI and installer artifact
+ README.md
+ PROJECT_STATUS.md
+ TROUBLESHOOTING.md
+```
+
+## Security and privacy
+
+The renderer runs with context isolation, sandboxing, and Node integration disabled. A restrictive Content Security Policy blocks network connections and remote scripts. The only IPC functions are exposed by the preload bridge. User settings and timer state stay in the local app-data directory.
+
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common Windows setup and notification issues, and [PROJECT_STATUS.md](PROJECT_STATUS.md) for verification state and remaining limitations.

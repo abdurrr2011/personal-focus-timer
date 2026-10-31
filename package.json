@@ -1,0 +1,63 @@
+{
+  "name": "focus-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A tiny neon-pixel Pomodoro timer for Windows 11.",
+  "author": "Abdurakhman",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=11.0.0"
+  },
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "smoke": "node tools/smoke-electron.cjs",
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/timer.js && node --check src/store.js && node --check renderer/app.js",
+    "dist": "npm run check && npm test && electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^45.1.0",
+    "electron-builder": "^26.0.12"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  },
+  "build": {
+    "appId": "com.focus-tracker.desktop",
+    "productName": "Focus Tracker",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/focus-mark.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Focus-Tracker-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": null
+  },
+  "allowScripts": {
+    "electron@45.1.0": true
+  }
+}

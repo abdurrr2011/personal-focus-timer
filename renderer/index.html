@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+  <meta name="theme-color" content="#08131b">
+  <title>Focus Tracker</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-row">
+        <img class="brand-mark" src="../assets/focus-mark.png" alt="" draggable="false">
+        <div><div class="brand-name">FOCUS<span>TRACKER</span></div><div class="brand-sub">DESKTOP // 01</div></div>
+      </div>
+
+      <div class="side-rule"></div>
+      <div class="side-label">WORKSPACE</div>
+      <button class="nav-item nav-active" type="button" aria-current="page">
+        <span class="nav-glyph">▦</span><span>Overview</span><span class="nav-edge"></span>
+      </button>
+      <button class="nav-item" type="button" data-action="open-settings">
+        <span class="nav-glyph">⚙</span><span>Preferences</span>
+      </button>
+
+      <div class="side-section-head"><span class="side-label">SESSION MODE</span><span class="live-dot" aria-label="Ready"></span></div>
+      <div class="side-modes" role="group" aria-label="Choose timer mode">
+        <button class="side-mode selected" type="button" data-mode="focus"><span class="mode-square green"></span><span>Focus</span><span class="mode-time" data-duration="focusMinutes">25m</span></button>
+        <button class="side-mode" type="button" data-mode="shortBreak"><span class="mode-square cyan"></span><span>Short break</span><span class="mode-time" data-duration="shortBreakMinutes">05m</span></button>
+        <button class="side-mode" type="button" data-mode="longBreak"><span class="mode-square blue"></span><span>Long break</span><span class="mode-time" data-duration="longBreakMinutes">15m</span></button>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="side-rule"></div>
+        <div class="system-card"><span class="system-icon">▣</span><div><div class="system-title">LOCAL SESSION</div><div class="system-caption">Your data stays on this PC</div></div><span class="system-led"></span></div>
+        <div class="version-label">FOCUS TRACKER <span>v1.0.0</span></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="titlebar">
+        <div class="breadcrumbs"><span>WORKSPACE</span><i>/</i><strong>OVERVIEW</strong></div>
+        <div class="titlebar-actions">
+          <span class="top-status"><span class="live-dot"></span><span id="top-status-text">READY TO FOCUS</span></span>
+          <button class="icon-button" type="button" data-action="compact" title="Toggle compact mode" aria-label="Toggle compact mode"><span class="compact-glyph">▤</span></button>
+          <button class="icon-button" type="button" data-action="open-settings" title="Settings" aria-label="Open settings"><span class="gear-glyph">⚙</span></button>
+          <span class="titlebar-divider"></span>
+          <button class="window-button" type="button" data-action="minimize" title="Minimize" aria-label="Minimize window">—</button>
+          <button class="window-button close-button" type="button" data-action="close" title="Hide to tray" aria-label="Hide to system tray">×</button>
+        </div>
+      </header>
+
+      <div class="workspace-scroll">
+        <section class="page-heading">
+          <div><div class="eyebrow"><span class="eyebrow-square"></span>YOUR PERSONAL FOCUS HUD</div><h1>Make room for <span>deep work.</span></h1><p>One clear session at a time. Find your rhythm and stay with it.</p></div>
+          <div class="clock-block"><span class="clock-label">LOCAL TIME</span><strong id="local-time">--:--</strong><span id="local-date">—</span></div>
+        </section>
+
+        <section class="dashboard-grid" aria-label="Focus dashboard">
+          <div class="primary-column">
+            <div class="mode-tabs" role="group" aria-label="Select session type">
+              <button class="mode-tab active" type="button" data-mode="focus"><span class="tab-mark"></span>FOCUS</button>
+              <button class="mode-tab" type="button" data-mode="shortBreak"><span class="tab-mark"></span>SHORT BREAK</button>
+              <button class="mode-tab" type="button" data-mode="longBreak"><span class="tab-mark"></span>LONG BREAK</button>
+            </div>
+
+            <section class="timer-panel" aria-label="Timer">
+              <div class="panel-corner corner-tl"></div><div class="panel-corner corner-br"></div>
+              <div class="timer-panel-head"><div><span class="panel-kicker">CURRENT SESSION</span><div class="session-name-row"><span class="session-indicator" id="session-indicator"></span><h2 id="session-title">FOCUS SESSION</h2></div></div><div class="session-counter"><span>SESSION</span><strong id="session-number">01</strong></div></div>
+              <div class="timer-stage">
+                <div class="timer-orbit" id="timer-orbit">
+                  <div class="orbit-inner"><span class="timer-status" id="timer-status">READY WHEN YOU ARE</span><div class="timer-value" id="timer-value" role="timer" aria-live="off">25:00</div><div class="timer-caption" id="timer-caption">TIME TO MAKE IT COUNT</div></div>
+                </div>
+                <div class="timer-side-note"><div class="target-graphic" aria-hidden="true"><span></span><i></i><b></b></div><span class="micro-label">KEEP YOUR</span><strong>ATTENTION<br>ON ONE THING.</strong><span class="note-dashes">— — — —</span><span class="note-foot">SMALL STEPS<br>ADD UP.</span></div>
+              </div>
+              <div class="pixel-progress-wrap"><div class="progress-meta"><span>SESSION PROGRESS</span><span id="progress-percent">0%</span></div><div class="pixel-progress" id="pixel-progress" role="progressbar" aria-label="Session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>
+              <div class="timer-controls">
+                <button class="control-secondary" type="button" data-action="reset"><span aria-hidden="true">↺</span><span>RESET</span></button>
+                <button class="control-primary" type="button" data-action="toggle-timer"><span class="play-symbol" id="play-symbol" aria-hidden="true">▶</span><span id="toggle-label">START FOCUS</span></button>
+                <button class="control-stop" type="button" data-action="stop" title="Stop and return to the start of this session" aria-label="Stop timer"><span>■</span></button>
+              </div>
+              <div class="timer-panel-footer"><span><kbd>SPACE</kbd> START / PAUSE</span><span><kbd>R</kbd> RESET</span><span class="footer-right"><span class="footer-dot"></span> TIMER RUNS IN BACKGROUND</span></div>
+            </section>
+
+            <section class="cycle-panel" aria-label="Current focus cycle">
+              <div class="cycle-copy"><span class="micro-label">YOUR RHYTHM</span><strong>FOCUS CYCLE</strong><span id="cycle-label">0 of 4 focus sessions complete</span></div>
+              <div class="cycle-blocks" id="cycle-blocks" aria-label="Focus sessions completed in this cycle"></div>
+              <div class="cycle-next"><span class="micro-label">NEXT MILESTONE</span><strong id="next-break-label">SHORT BREAK</strong></div>
+            </section>
+          </div>
+
+          <aside class="insight-column">
+            <section class="total-card"><div class="card-topline"><span class="micro-label">ALL-TIME PROGRESS</span><span class="tiny-cross" aria-hidden="true">✣</span></div><div class="total-value"><strong id="total-sessions">0</strong><span>SESSIONS<br>COMPLETED</span></div><div class="total-separator"></div><div class="total-foot"><span class="total-led"></span> EVERY FINISH COUNTS</div><div class="tiny-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></section>
+            <section class="signal-card"><div class="signal-icon" aria-hidden="true"><span>✳</span></div><span class="micro-label">A NOTE TO SELF</span><h3>Progress<br>over <em>perfect.</em></h3><p>Protect this little block of time. The rest can wait.</p><div class="signal-footer"><span>KEEP GOING</span><span>↗</span></div></section>
+            <section class="privacy-card"><span class="privacy-icon">◈</span><div><strong>PRIVATE BY DESIGN</strong><span>Settings are stored locally.</span></div></section>
+          </aside>
+        </section>
+        <footer class="page-footer"><span>BUILT FOR THE WORK THAT MATTERS.</span><span>NO CLOUD. NO NOISE. JUST FOCUS.</span></footer>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="settings-modal" hidden>
+    <section class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="settings-heading"><div><span class="eyebrow"><span class="eyebrow-square"></span>CONFIGURATION</span><h2 id="settings-title">Settings<span class="heading-period">.</span></h2></div><button class="icon-button modal-close" type="button" data-action="close-settings" aria-label="Close settings">×</button></div>
+      <p class="settings-intro">Tune your session length and desktop behavior.</p>
+      <div class="settings-section-label">SESSION LENGTH <span>MINUTES</span></div>
+      <div class="duration-fields">
+        <label class="duration-field"><span><i class="mode-square green"></i>FOCUS</span><input type="number" min="1" max="120" step="1" name="focusMinutes" inputmode="numeric"></label>
+        <label class="duration-field"><span><i class="mode-square cyan"></i>SHORT BREAK</span><input type="number" min="1" max="120" step="1" name="shortBreakMinutes" inputmode="numeric"></label>
+        <label class="duration-field"><span><i class="mode-square blue"></i>LONG BREAK</span><input type="number" min="1" max="120" step="1" name="longBreakMinutes" inputmode="numeric"></label>
+      </div>
+      <div class="settings-section-label behavior-label">DESKTOP BEHAVIOR</div>
+      <label class="setting-toggle"><span><strong>Desktop notifications</strong><small>Alert when a session ends.</small></span><input type="checkbox" name="notifications"><i class="toggle-track"></i></label>
+      <label class="setting-toggle"><span><strong>Always on top</strong><small>Keep the tracker above other windows.</small></span><input type="checkbox" name="alwaysOnTop"><i class="toggle-track"></i></label>
+      <label class="setting-toggle"><span><strong>Sound alert</strong><small>Play a short tone at session end.</small></span><input type="checkbox" name="soundAlerts"><i class="toggle-track"></i></label>
+      <label class="setting-toggle" id="launch-setting"><span><strong>Start with Windows</strong><small>Open Focus Tracker when you sign in.</small></span><input type="checkbox" name="launchAtLogin"><i class="toggle-track"></i></label>
+      <div class="settings-note"><span>▣</span> Your preferences never leave this device.</div>
+      <div class="settings-actions"><button class="cancel-button" type="button" data-action="close-settings">CANCEL</button><button class="save-button" type="button" data-action="save-settings">SAVE CHANGES <span>↗</span></button></div>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
