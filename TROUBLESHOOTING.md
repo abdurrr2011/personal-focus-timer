@@ -18,7 +18,7 @@ Check **Preferences → Desktop notifications** and Windows **Settings → Syste
 
 ## The window is hidden behind another app
 
-**Preferences → Always on top** is enabled by default. Turn it on again if it was disabled. Compact mode retains the same always-on-top setting.
+**Settings → Always on top** is enabled by default. Turn it on again if it was disabled. Micro Mode retains the same always-on-top setting.
 
 ## Start with Windows is unavailable
 

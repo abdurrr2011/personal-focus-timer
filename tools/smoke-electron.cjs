@@ -56,9 +56,9 @@ async function main() {
     assert.equal(snapshot.timer.mode, 'focus');
     assert.equal(snapshot.timer.status, 'idle');
     assert.equal(snapshot.settings.alwaysOnTop, true);
-    assert.equal(snapshot.runtime.windowMode, 'compact');
-    assert.equal(await evaluate('document.body.classList.contains("compact")'), true);
-    assert.equal(await evaluate('document.querySelector(\'[data-action="micro"]\').textContent.trim()'), '━MICRO MODE');
+    assert.equal(snapshot.runtime.windowMode, 'dashboard');
+    assert.equal(await evaluate('document.body.classList.contains("compact")'), false);
+    assert.equal(await evaluate('document.querySelector(\'[data-action="micro"]\').textContent.trim()'), '━ Micro Mode');
     assert.match(snapshot.settings.soundAlertUrl, /assets\/faceit_accept_sound_epic_-8962405019821701368\.mp3$/);
     assert.equal(await evaluate('document.querySelector("#preview-sound").disabled'), false);
     assert.equal(await evaluate('document.querySelector("#sound-file-label").textContent'), 'Built-in MP3');
@@ -80,8 +80,9 @@ async function main() {
     snapshot = await getSnapshot();
     assert.equal(snapshot.timer.mode, 'shortBreak');
     assert.equal(snapshot.timer.remainingMs, snapshot.settings.shortBreakMinutes * 60_000);
-    await click('[data-action="open-settings"]');
-    assert.equal(await evaluate('!document.querySelector("#settings-modal").hidden'), true);
+    await click('[data-view="settings"]');
+    assert.equal(await evaluate('!document.querySelector("#view-settings").hidden'), true);
+    assert.equal(await evaluate('document.querySelector(\'[name="focusMinutes"]\').value'), '25');
     await evaluate(`(() => {
       window.__previewCalls = [];
       window.Audio = class {
@@ -122,11 +123,9 @@ async function main() {
     assert.equal(snapshot.settings.soundAlertFile, null);
     assert.match(snapshot.settings.soundAlertUrl, /assets\/faceit_accept_sound_epic_-8962405019821701368\.mp3$/);
     assert.equal(await evaluate('document.querySelector("#sound-file-label").textContent'), 'Built-in MP3');
-    await click('[data-action="close-settings"]');
     assert.equal(await evaluate('window.__previewCalls[2].paused'), true);
-    console.log('PASS bundled default MP3, custom preview, restore default, and settings dialog');
+    console.log('PASS bundled default MP3, custom preview, restore default, and settings view');
 
-    await click('[data-action="open-settings"]');
     await evaluate(`(() => {
       document.querySelector('[name="sessionsUntilLongBreak"]').value = '3';
       return true;
@@ -134,29 +133,30 @@ async function main() {
     await click('[data-action="save-settings"]');
     snapshot = await getSnapshot();
     assert.equal(snapshot.settings.sessionsUntilLongBreak, 3);
-    assert.equal(await evaluate('document.querySelectorAll("#cycle-blocks .cycle-unit").length'), 3);
-    assert.equal(await evaluate('document.querySelector("#cycle-label").textContent'), '0 of 3 focus sessions complete');
-    await click('[data-action="open-settings"]');
+    await click('[data-view="settings"]');
     await evaluate(`(() => {
       document.querySelector('[name="sessionsUntilLongBreak"]').value = '4';
       return true;
     })()`);
     await click('[data-action="save-settings"]');
-    console.log('PASS configurable long-break interval and cycle progress display');
+    console.log('PASS configurable long-break interval');
+
+    await click('[data-view="statistics"]');
+    assert.equal(await evaluate('document.querySelectorAll("#weekly-chart .weekly-day").length'), 7);
+    assert.equal(await evaluate('document.querySelector("#stat-completed").textContent'), '0');
+    await click('[data-view="timer"]');
 
     await click('[data-action="toggle-timer"]');
     assert.equal((await getSnapshot()).timer.status, 'running');
     await click('[data-action="micro"]');
     assert.equal(await evaluate('document.body.classList.contains("micro")'), true);
-    assert.equal(await evaluate('document.body.classList.contains("compact")'), false);
+    assert.equal(await evaluate('getComputedStyle(document.querySelector(".micro-hud")).webkitAppRegion'), 'drag');
+    assert.equal(await evaluate('getComputedStyle(document.querySelector(".micro-toggle")).webkitAppRegion'), 'no-drag');
+    assert.equal(await evaluate('getComputedStyle(document.querySelector(".micro-mode-switch")).webkitAppRegion'), 'no-drag');
     snapshot = await getSnapshot();
     assert.equal(snapshot.timer.status, 'running');
     await click('[data-action="expand"]');
     assert.equal(await evaluate('document.body.classList.contains("micro")'), false);
-    assert.equal(await evaluate('document.body.classList.contains("compact")'), false);
-    assert.equal((await getSnapshot()).timer.status, 'running');
-    await click('[data-action="compact"]');
-    assert.equal(await evaluate('document.body.classList.contains("compact")'), true);
     assert.equal((await getSnapshot()).timer.status, 'running');
     await click('[data-action="toggle-timer"]');
     assert.equal((await getSnapshot()).timer.status, 'paused');
@@ -166,7 +166,7 @@ async function main() {
     snapshot = await getSnapshot();
     assert.equal(snapshot.timer.mode, 'focus');
     assert.equal(snapshot.timer.status, 'idle');
-    console.log('PASS compact and micro modes preserve the active timer and restore the dashboard');
+    console.log('PASS Micro Mode preserves the active timer and returns to the dashboard');
   } finally {
     socket.close();
   }

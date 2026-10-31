@@ -15,6 +15,7 @@ const {
 const {
   DEFAULT_SETTINGS,
   MODES,
+  durationFor,
   createTimerState,
   remainingMs,
   startTimer,
@@ -26,6 +27,7 @@ const {
   restoreTimerState,
 } = require('./timer');
 const { createStore, sanitizeSettings } = require('./store');
+const { addFocusSession, buildStatistics } = require('./statistics');
 
 const APP_ID = 'com.focus-tracker.desktop';
 const TICK_INTERVAL_MS = 250;
@@ -37,7 +39,7 @@ let settings = { ...DEFAULT_SETTINGS };
 let timerState = null;
 let tickHandle = null;
 let shouldQuit = false;
-let compactMode = true;
+let dailyActivity = {};
 let microMode = false;
 let expiredWhileClosed = false;
 let expiredModeWhileClosed = 'focus';
@@ -52,6 +54,7 @@ const gotLock = app.requestSingleInstanceLock();
 function snapshot() {
   return {
     timer: { ...timerState, remainingMs: remainingMs(timerState, Date.now()) },
+    statistics: buildStatistics(dailyActivity),
     settings: {
       ...settings,
       soundAlertUrl: pathToFileURL(settings.soundAlertFile
@@ -61,7 +64,7 @@ function snapshot() {
     runtime: {
       packaged: app.isPackaged,
       platform: process.platform,
-      windowMode: microMode ? 'micro' : compactMode ? 'compact' : 'dashboard',
+      windowMode: microMode ? 'micro' : 'dashboard',
     },
   };
 }
@@ -69,10 +72,15 @@ function snapshot() {
 function persist() {
   if (!store || !timerState) return;
   try {
-    store.save({ settings, timer: timerState });
+    store.save({ settings, timer: timerState, activity: dailyActivity });
   } catch (error) {
     console.error('Could not persist Focus Tracker state:', error);
   }
+}
+
+function recordCompletedSession(mode, completedAt = new Date()) {
+  if (mode !== 'focus') return;
+  dailyActivity = addFocusSession(dailyActivity, completedAt, durationFor('focus', settings) / 60_000);
 }
 
 function sendSnapshot(completed = false, completedMode = null) {
@@ -119,6 +127,7 @@ function runCommand(action, value) {
       break;
     default: throw new RangeError('Unknown timer command');
   }
+  if (completedMode !== null) recordCompletedSession(completedMode, new Date(now));
   persist();
   updateTrayMenu();
   if (completedMode !== null) {
@@ -160,19 +169,9 @@ function showWindow() {
   mainWindow.focus();
 }
 
-function setCompactMode() {
-  if (!mainWindow) return compactMode;
-  compactMode = true;
-  microMode = false;
-  mainWindow.setMinimumSize(242, 125);
-  mainWindow.setSize(375, 195, true);
-  return true;
-}
-
 function setMicroMode() {
   if (!mainWindow) return microMode;
   microMode = true;
-  compactMode = false;
   mainWindow.setMinimumSize(208, 38);
   mainWindow.setSize(320, 52, true);
   return true;
@@ -180,7 +179,6 @@ function setMicroMode() {
 
 function expandDashboard() {
   if (!mainWindow) return false;
-  compactMode = false;
   microMode = false;
   mainWindow.setMinimumSize(900, 640);
   mainWindow.setSize(1160, 740, true);
@@ -189,14 +187,14 @@ function expandDashboard() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: compactMode ? 375 : microMode ? 320 : 1160,
-    height: compactMode ? 195 : microMode ? 52 : 740,
-    minWidth: compactMode ? 242 : microMode ? 208 : 900,
-    minHeight: compactMode ? 125 : microMode ? 38 : 640,
+    width: microMode ? 320 : 1160,
+    height: microMode ? 52 : 740,
+    minWidth: microMode ? 208 : 900,
+    minHeight: microMode ? 38 : 640,
     show: false,
     frame: false,
     transparent: false,
-    backgroundColor: '#08131b',
+    backgroundColor: '#111127',
     title: 'Focus Tracker',
     icon: path.join(__dirname, '..', 'assets', 'focus-mark.ico'),
     autoHideMenuBar: true,
@@ -299,7 +297,6 @@ function registerIpc() {
   ipcMain.handle('window:action', (_event, action) => {
     if (action === 'minimize') mainWindow?.minimize();
     else if (action === 'hide') mainWindow?.hide();
-    else if (action === 'compact') return setCompactMode();
     else if (action === 'micro') return setMicroMode();
     else if (action === 'expand') return expandDashboard();
     else throw new RangeError('Unknown window action');
@@ -313,6 +310,7 @@ function beginTimerLoop() {
     if (timerState.status === 'running' && remainingMs(timerState, Date.now()) <= 0) {
       const previousMode = timerState.mode;
       timerState = finishSession(timerState, settings);
+      recordCompletedSession(previousMode);
       persist();
       updateTrayMenu();
       showCompletionNotification(previousMode);
@@ -332,11 +330,13 @@ if (!gotLock) {
     store = createStore(app.getPath('userData'));
     const saved = store.load();
     settings = sanitizeSettings(saved.settings);
+    dailyActivity = saved.activity;
     const now = Date.now();
     expiredWhileClosed = saved.timer?.status === 'running' && Number.isFinite(saved.timer.deadlineAt) && saved.timer.deadlineAt <= now;
     expiredModeWhileClosed = saved.timer?.mode || 'focus';
     startupCompletionPending = expiredWhileClosed;
     timerState = restoreTimerState(saved.timer, settings, now);
+    if (expiredWhileClosed) recordCompletedSession(expiredModeWhileClosed, new Date(now));
     applyLoginSetting();
     registerIpc();
     createWindow();
