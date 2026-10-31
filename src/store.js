@@ -4,16 +4,20 @@ const { DEFAULT_SETTINGS } = require('./timer');
 
 const BOOLEAN_KEYS = ['notifications', 'alwaysOnTop', 'soundAlerts', 'launchAtLogin'];
 const MINUTE_KEYS = ['focusMinutes', 'shortBreakMinutes', 'longBreakMinutes'];
+const SOUND_FILE_PATTERN = /^alert-[a-f0-9-]{36}\.(wav|mp3|ogg|m4a)$/i;
 
 function sanitizeSettings(input = {}) {
   const source = input && typeof input === 'object' && !Array.isArray(input) ? input : {};
-  const settings = { ...DEFAULT_SETTINGS };
+  const settings = { ...DEFAULT_SETTINGS, soundAlertFile: null };
   for (const key of MINUTE_KEYS) {
     const value = Number(source[key]);
     if (Number.isFinite(value)) settings[key] = Math.min(120, Math.max(1, Math.round(value)));
   }
   for (const key of BOOLEAN_KEYS) {
     if (typeof source[key] === 'boolean') settings[key] = source[key];
+  }
+  if (typeof source.soundAlertFile === 'string' && SOUND_FILE_PATTERN.test(source.soundAlertFile)) {
+    settings.soundAlertFile = source.soundAlertFile;
   }
   return settings;
 }

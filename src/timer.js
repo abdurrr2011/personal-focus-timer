@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS = Object.freeze({
   notifications: true,
   alwaysOnTop: true,
   soundAlerts: false,
+  soundAlertFile: null,
   launchAtLogin: false,
 });
 

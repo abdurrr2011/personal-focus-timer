@@ -1,8 +1,12 @@
 const path = require('node:path');
+const fs = require('node:fs');
+const { randomUUID } = require('node:crypto');
+const { pathToFileURL } = require('node:url');
 const {
   app,
   BrowserWindow,
   ipcMain,
+  dialog,
   Notification,
   shell,
   nativeImage,
@@ -37,6 +41,7 @@ let shouldQuit = false;
 let compactMode = false;
 let expiredWhileClosed = false;
 let expiredModeWhileClosed = 'focus';
+let startupCompletionPending = false;
 
 app.setAppUserModelId(APP_ID);
 if (!app.isPackaged && process.env.FOCUS_TRACKER_USER_DATA_DIR) {
@@ -46,7 +51,12 @@ if (!app.isPackaged && process.env.FOCUS_TRACKER_USER_DATA_DIR) {
 function snapshot() {
   return {
     timer: { ...timerState, remainingMs: remainingMs(timerState, Date.now()) },
-    settings: { ...settings },
+    settings: {
+      ...settings,
+      soundAlertUrl: settings.soundAlertFile
+        ? pathToFileURL(path.join(app.getPath('userData'), 'sounds', settings.soundAlertFile)).href
+        : null,
+    },
     runtime: { packaged: app.isPackaged, platform: process.platform },
   };
 }
@@ -69,13 +79,13 @@ function sendSnapshot(completed = false, completedMode = null) {
 }
 
 function showCompletionNotification(previousMode) {
+  if (settings.soundAlerts && !settings.soundAlertFile) {
+    try { shell.beep(); } catch (error) { console.error('System alert tone failed:', error); }
+  }
   if (!settings.notifications || !Notification.isSupported()) return;
   const text = previousMode === 'focus'
     ? `Focus session ${timerState.completedSessions} complete. ${timerState.mode === 'longBreak' ? 'Your long break is ready.' : 'Take a short breather.'}`
     : 'Break complete. Your next focus session is ready.';
-  if (settings.soundAlerts) {
-    try { shell.beep(); } catch (error) { console.error('System alert tone failed:', error); }
-  }
   try {
     new Notification({ title: 'Focus Tracker', body: text, silent: true }).show();
   } catch (error) {
@@ -191,6 +201,12 @@ function createWindow() {
     sendSnapshot();
   });
   mainWindow.webContents.on('did-finish-load', () => console.log('Focus Tracker UI loaded.'));
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (startupCompletionPending) {
+      startupCompletionPending = false;
+      sendSnapshot(true, expiredModeWhileClosed);
+    }
+  });
   mainWindow.webContents.on('did-fail-load', (_event, code, description, url) => console.error('Focus Tracker UI failed to load:', code, description, url));
   mainWindow.on('close', (event) => {
     if (!shouldQuit) {
@@ -226,6 +242,38 @@ function registerIpc() {
     applyLoginSetting();
     if (durationsChanged) timerState = resetTimer(timerState, settings);
     mainWindow?.setAlwaysOnTop(settings.alwaysOnTop, 'floating');
+    persist();
+    sendSnapshot();
+    return snapshot();
+  });
+  ipcMain.handle('sound:choose', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'Choose a session alert sound',
+      properties: ['openFile'],
+      filters: [{ name: 'Audio files', extensions: ['wav', 'mp3', 'ogg', 'm4a'] }],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+
+    const sourcePath = result.filePaths[0];
+    const extension = path.extname(sourcePath).slice(1).toLowerCase();
+    const allowedExtensions = ['wav', 'mp3', 'ogg', 'm4a'];
+    if (!allowedExtensions.includes(extension)) throw new TypeError('Unsupported alert sound format');
+    const fileInfo = fs.statSync(sourcePath);
+    if (!fileInfo.isFile() || fileInfo.size === 0 || fileInfo.size > 10 * 1024 * 1024) {
+      throw new RangeError('Choose an audio file smaller than 10 MB');
+    }
+
+    const fileName = `alert-${randomUUID()}.${extension}`;
+    const soundDirectory = path.join(app.getPath('userData'), 'sounds');
+    fs.mkdirSync(soundDirectory, { recursive: true });
+    fs.copyFileSync(sourcePath, path.join(soundDirectory, fileName));
+    settings = sanitizeSettings({ ...settings, soundAlertFile: fileName });
+    persist();
+    sendSnapshot();
+    return snapshot();
+  });
+  ipcMain.handle('sound:reset', () => {
+    settings = sanitizeSettings({ ...settings, soundAlertFile: null });
     persist();
     sendSnapshot();
     return snapshot();
@@ -267,6 +315,7 @@ if (!gotLock) {
     const now = Date.now();
     expiredWhileClosed = saved.timer?.status === 'running' && Number.isFinite(saved.timer.deadlineAt) && saved.timer.deadlineAt <= now;
     expiredModeWhileClosed = saved.timer?.mode || 'focus';
+    startupCompletionPending = expiredWhileClosed;
     timerState = restoreTimerState(saved.timer, settings, now);
     applyLoginSetting();
     registerIpc();

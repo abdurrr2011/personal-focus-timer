@@ -10,12 +10,12 @@ A lightweight Pomodoro desktop timer for Windows 11, styled as an original neon-
 - Start, pause, resume, reset, and switch session type; session totals and cycle progress are saved.
 - Deadline-based countdowns continue accurately when the window is hidden, the PC is busy, or the app is reopened.
 - Frameless, draggable window; optional always-on-top; compact floating mode.
-- Windows desktop notifications, optional completion tone, system-tray controls, and optional launch at sign-in.
+- Windows desktop notifications, optional completion sound (system beep or a custom WAV, MP3, OGG, or M4A file), system-tray controls, and optional launch at sign-in.
 - Settings are written locally to the app's user-data folder. No network requests, accounts, analytics, or cloud sync.
 
 ## Install the Windows app
 
-Download and run `Focus-Tracker-Setup-1.0.0.exe` from the build's `release/` folder. The installer offers a choice of installation directory and adds Start-menu and desktop shortcuts. No separate Node.js installation is needed to run the installed app.
+Download the Windows installer from the project's [latest GitHub release](https://github.com/abdurrr2011/focus-tracker/releases/latest). If there is no published release yet, download the `focus-tracker-windows-x64` artifact from a successful run on the [Actions page](https://github.com/abdurrr2011/focus-tracker/actions/workflows/windows.yml). The installer offers a choice of installation directory and adds Start-menu and desktop shortcuts. No separate Node.js installation is needed to run the installed app.
 
 The installer is currently unsigned. Windows SmartScreen may show an unknown-publisher warning; verify that the installer came from a trusted build before allowing it to run.
 
@@ -24,13 +24,13 @@ The installer is currently unsigned. Windows SmartScreen may show an unknown-pub
 Requirements: Windows 11 x64, Node.js 22.12 or newer, npm 11 or newer, and Git. The Windows installer is built on Windows; the development scripts and timer unit tests use Node.js.
 
 ```powershell
-git clone <your-repository-url> focus-tracker
+git clone https://github.com/abdurrr2011/focus-tracker.git
 cd focus-tracker
 npm ci
 npm start
 ```
 
-This repository has not been published or assigned a remote. For a local checkout, skip `git clone` and run the commands from the project folder.
+For an existing local checkout, skip `git clone` and run the commands from the project folder.
 
 ### Checks and build
 
@@ -65,6 +65,8 @@ Build output goes to `release/`. `npm run dist` uses electron-builder to package
 - **Start with Windows:** available in the installed Windows app. It is disabled when running from source because a development checkout is not a stable sign-in target.
 
 Session lengths can be configured from 1 to 120 minutes. Changing a duration resets the current session to the new configured length.
+
+To use a custom completion sound, open **Preferences**, select **Choose file**, and choose a WAV, MP3, OGG, or M4A file smaller than 10 MB. The sound is copied into the app's local user-data folder. Choose **Use default** to return to the system beep.
 
 ## Architecture
 

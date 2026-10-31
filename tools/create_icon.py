@@ -5,13 +5,16 @@ import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1] / "assets"
-SIZE = 64
+LOGICAL_SIZE = 64
+SCALE = 4
+SIZE = LOGICAL_SIZE * SCALE
 
 
 def draw_icon() -> bytes:
     pixels = bytearray(SIZE * SIZE * 4)
 
     def rect(x: int, y: int, width: int, height: int, color: tuple[int, int, int, int]) -> None:
+        x, y, width, height = x * SCALE, y * SCALE, width * SCALE, height * SCALE
         for row in range(max(0, y), min(SIZE, y + height)):
             start = (row * SIZE + max(0, x)) * 4
             end = (row * SIZE + min(SIZE, x + width)) * 4
@@ -21,7 +24,7 @@ def draw_icon() -> bytes:
     cyan = (73, 217, 244, 255)
     green = (112, 242, 161, 255)
     border = (24, 61, 72, 255)
-    rect(0, 0, SIZE, SIZE, bg)
+    rect(0, 0, LOGICAL_SIZE, LOGICAL_SIZE, bg)
     rect(3, 3, 58, 1, border)
     rect(3, 60, 58, 1, border)
     rect(3, 3, 1, 58, border)
@@ -72,7 +75,9 @@ def main() -> None:
     (ROOT / "focus-mark.png").write_bytes(png)
     # ICO entry points at a PNG payload, supported by Windows Vista and newer.
     header = struct.pack("<HHH", 0, 1, 1)
-    entry = struct.pack("<BBBBHHII", SIZE, SIZE, 0, 0, 1, 32, len(png), 22)
+    # A zero width/height byte means 256 pixels in an ICO directory entry.
+    icon_dimension = 0 if SIZE == 256 else SIZE
+    entry = struct.pack("<BBBBHHII", icon_dimension, icon_dimension, 0, 0, 1, 32, len(png), 22)
     (ROOT / "focus-mark.ico").write_bytes(header + entry + png)
     print(f"Wrote PNG ({len(png)} bytes) and ICO ({len(png) + 22} bytes) to {ROOT}")
 

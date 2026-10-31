@@ -211,6 +211,9 @@ kbd { border: 1px solid #36505a; padding: 2px 4px; color: #adc1c2; font: inherit
 .setting-toggle input:focus-visible + .toggle-track { outline: 2px solid var(--cyan); outline-offset: 3px; }
 .settings-note { display: flex; align-items: center; gap: 8px; margin-top: 15px; padding: 9px; color: #82999d; background: rgba(73,217,244,.035); font-size: 9px; }
 .settings-note span { color: var(--cyan); }
+.sound-picker-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(37,63,71,.68); color: #799098; font-size: 9px; }
+.sound-picker-row > div { display: flex; gap: 6px; }
+.sound-picker-row .cancel-button { height: 29px; padding: 0 8px; font-size: 7px; }
 .settings-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 18px; }
 .cancel-button, .save-button { height: 36px; padding: 0 15px; border: 1px solid #29454d; background: transparent; color: #9eb0b2; font: 8px var(--pixel-font); letter-spacing: .4px; cursor: pointer; }
 .cancel-button:hover { color: #e6f0ed; border-color: #52717a; }

@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld('focusTracker', Object.freeze({
   getSnapshot: () => ipcRenderer.invoke('state:get'),
   command: (action, value) => ipcRenderer.invoke('timer:command', { action, value }),
   saveSettings: (settings) => ipcRenderer.invoke('settings:save', settings),
+  chooseAlertSound: () => ipcRenderer.invoke('sound:choose'),
+  resetAlertSound: () => ipcRenderer.invoke('sound:reset'),
   windowAction: (action) => ipcRenderer.invoke('window:action', action),
   onTick: (callback) => {
     const listener = (_event, snapshot) => callback(snapshot);

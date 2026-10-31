@@ -1,6 +1,6 @@
 # Project status
 
-**Current stage:** Feature implementation is complete; local checks, Windows application smoke-test, installer packaging, and final repository review are in progress.
+**Current stage:** Feature implementation and Windows x64 packaging are complete; final code review and commit are in progress.
 
 ## Milestones
 
@@ -10,7 +10,8 @@
 - [x] Build the neon-pixel dashboard, settings dialog, compact view, and keyboard controls.
 - [x] Integrate native notifications, tray controls, always-on-top, and Windows sign-in setting.
 - [x] Add documentation, Git configuration, automated tests, and Windows CI.
-- [ ] Verify the packaged app on this machine and produce the NSIS installer.
+- [x] Build and verify the Windows x64 NSIS installer artifact.
+- [x] Run the desktop source smoke test for timer controls, mode selection, settings, and compact mode.
 - [ ] Complete the final code/build review and commit the verified release state.
 
 ## Technical decisions
@@ -24,14 +25,16 @@
 ## Verification record
 
 - **Environment inspected:** Windows 11 (build 26200), Node.js 24.18.1, npm 11.16.0, Git 2.53.0; no Rust toolchain or Python `pip` in the selected Python environment.
-- **Automated tests:** 14 Node built-in tests currently pass, covering timer state transitions, long-break cadence, duration bounds, persistence, corrupt data, settings sanitization, and deadline-expiry edge cases.
-- **Packaging and desktop smoke-test:** pending final build execution.
+- **Automated tests:** 15 Node built-in tests pass, covering timer state transitions, long-break cadence, duration bounds, persistence, corrupt data, settings sanitization, deadline-expiry edge cases, and Windows icon dimensions.
+- **Docker verification:** Node.js 24.22.2 / npm 11.19.1; `npm run check`, all 15 tests, and `npm audit` passed inside a Docker container limited to 2 CPUs and 2 GiB, with the repository mounted read-only and Linux `node_modules` isolated in a named volume.
+- **Windows installer:** `npm run dist` succeeded and produced `release/Focus-Tracker-Setup-1.0.0.exe` (121,219,039 bytes; PE `MZ` signature). The installer is unsigned.
+- **Desktop source smoke-test:** passed start/countdown/pause/reset, mode selection, settings dialog, and compact mode. The production installer has not yet been installed/launched for a separate end-to-end check.
 
 ## Known limitations
 
 - Installer is unsigned; Windows SmartScreen may display an unknown-publisher prompt.
 - Windows startup integration is active only for the installed, packaged app; it is intentionally disabled in source/development mode.
 - Notifications are subject to Windows notification settings, Focus Assist, and device policy.
-- There is no automated visual regression suite; the UI requires a final live Windows desktop smoke-test.
+- There is no automated visual regression suite; the installer has been built, but a separate install-and-launch check is still pending.
 
 Update this file when the build/test state changes. Do not mark packaging or a desktop test complete until actual tool output confirms it.

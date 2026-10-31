@@ -22,6 +22,8 @@ function render(snapshot) {
   if (!snapshot?.timer || !snapshot?.settings) return;
   state.timer = snapshot.timer;
   state.settings = snapshot.settings;
+  const soundFileLabel = $('#sound-file-label');
+  if (soundFileLabel) soundFileLabel.textContent = state.settings.soundAlertFile ? 'Custom sound selected' : 'System beep';
   const startupSetting = $('#launch-setting');
   const startupInput = startupSetting.querySelector('input');
   const packaged = Boolean(snapshot.runtime?.packaged);
@@ -134,6 +136,35 @@ async function doWindowAction(action) {
   }
 }
 
+async function chooseAlertSound() {
+  try {
+    const snapshot = await window.focusTracker.chooseAlertSound();
+    if (!snapshot) return;
+    render(snapshot);
+    showToast('CUSTOM ALERT SOUND SAVED');
+  } catch (error) {
+    console.error('Could not select alert sound:', error);
+    showToast('COULD NOT SELECT ALERT SOUND');
+  }
+}
+
+async function resetAlertSound() {
+  try {
+    const snapshot = await window.focusTracker.resetAlertSound();
+    render(snapshot);
+    showToast('SYSTEM BEEP RESTORED');
+  } catch (error) {
+    console.error('Could not restore system alert sound:', error);
+    showToast('COULD NOT RESTORE SYSTEM BEEP');
+  }
+}
+
+function playCompletionSound(snapshot) {
+  if (!snapshot.settings?.soundAlerts || !snapshot.settings.soundAlertUrl) return;
+  const audio = new Audio(snapshot.settings.soundAlertUrl);
+  audio.play().catch((error) => console.error('Custom alert sound failed:', error));
+}
+
 function bindInteractions() {
   $('#pixel-progress').replaceChildren(...Array.from({ length: 32 }, () => {
     const segment = document.createElement('span');
@@ -162,6 +193,8 @@ function bindInteractions() {
       'open-settings': openSettings,
       'close-settings': closeSettings,
       'save-settings': saveSettings,
+      'choose-sound': chooseAlertSound,
+      'reset-sound': resetAlertSound,
       minimize: () => doWindowAction('minimize'),
       close: () => doWindowAction('hide'),
       compact: () => doWindowAction('compact'),
@@ -184,6 +217,7 @@ function bindInteractions() {
   window.focusTracker.onTick(render);
   window.focusTracker.onComplete((snapshot) => {
     render(snapshot);
+    playCompletionSound(snapshot);
     const completedMode = snapshot.completedMode || snapshot.timer.mode;
     const completedLabel = completedMode === 'longBreak' ? 'LONG BREAK' : completedMode === 'shortBreak' ? 'SHORT BREAK' : 'FOCUS';
     showToast(`${completedLabel} COMPLETE — ${completedMode === 'focus' ? 'TIME FOR A BREAK' : 'TIME TO FOCUS'}`);
