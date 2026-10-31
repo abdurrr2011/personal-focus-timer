@@ -66,7 +66,7 @@ Build output goes to `release/`. `npm run dist` uses electron-builder to package
 
 Session lengths can be configured from 1 to 120 minutes. Changing a duration resets the current session to the new configured length.
 
-To use a custom completion sound, open **Preferences**, select **Choose file**, and choose a WAV, MP3, OGG, or M4A file smaller than 10 MB. The sound is copied into the app's local user-data folder. Choose **Use default** to return to the system beep.
+To use a custom completion sound, open **Preferences**, select **Choose file**, and choose a WAV, MP3, OGG, or M4A file smaller than 10 MB. The sound is copied into the app's local user-data folder. Select **Preview** to listen to it before the next session ends. Choose **Use default** to return to the system beep.
 
 ## Architecture
 

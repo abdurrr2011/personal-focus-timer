@@ -70,7 +70,29 @@ async function main() {
     assert.equal(snapshot.timer.remainingMs, snapshot.settings.shortBreakMinutes * 60_000);
     await click('[data-action="open-settings"]');
     assert.equal(await evaluate('!document.querySelector("#settings-modal").hidden'), true);
+    assert.equal(await evaluate('document.querySelector("#preview-sound").disabled'), true);
+    await evaluate(`(() => {
+      window.__previewCalls = [];
+      window.Audio = class {
+        constructor(source) { this.source = source; window.__previewCalls.push(this); }
+        addEventListener() {}
+        play() { this.played = true; return Promise.resolve(); }
+        pause() { this.paused = true; }
+      };
+      render({
+        timer: state.timer,
+        settings: { ...state.settings, soundAlertUrl: 'file:///preview.wav' },
+        runtime: { packaged: false },
+      });
+      return true;
+    })()`);
+    await click('[data-action="preview-sound"]');
+    assert.deepEqual(await evaluate('({ source: window.__previewCalls[0].source, played: window.__previewCalls[0].played })'), {
+      source: 'file:///preview.wav',
+      played: true,
+    });
     await click('[data-action="close-settings"]');
+    assert.equal(await evaluate('window.__previewCalls[0].paused'), true);
     console.log('PASS reset, session mode selection, and settings dialog');
 
     await click('[data-action="compact"]');
