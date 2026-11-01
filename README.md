@@ -19,15 +19,37 @@
 
 ## Install the app
 
-Download the package for your system from the project's [latest GitHub release](https://github.com/abdurrr2011/personal-focus-timer-desk-app/releases/latest):
+Download the latest installer from [GitHub Releases](https://github.com/abdurrr2011/personal-focus-timer-desk-app/releases/latest). Choose the package matching your operating system:
 
-- **Windows x64:** run the NSIS `.exe` installer. It offers an installation-directory choice and creates Start-menu and desktop shortcuts.
-- **macOS (Intel and Apple silicon):** open the universal `.dmg` and move Focus Tracker to Applications, or use the `.zip`.
-- **Linux x64:** use the `.AppImage` on a desktop distribution with FUSE support, or install the `.deb` on a Debian-based distribution.
+- **Windows x64:** run `Focus-Tracker-Setup-<version>.exe`. The installer lets you choose an installation folder and creates Start-menu and desktop shortcuts.
+- **macOS (Intel and Apple silicon):** open `Focus-Tracker-<version>-mac-universal.dmg` and move Focus Tracker to Applications. The `.zip` contains the same universal app.
+- **Linux x64:** make `Focus-Tracker-<version>-linux-x86_64.AppImage` executable (`chmod +x Focus-Tracker-<version>-linux-x86_64.AppImage`) and run it, or install `Focus-Tracker-<version>-linux-amd64.deb` on a Debian-based distribution with `sudo apt install ./Focus-Tracker-<version>-linux-amd64.deb`.
 
-Use the accompanying `SHA256SUMS.txt` to verify downloads. On macOS or Linux, run `shasum -a 256 -c SHA256SUMS.txt` in the folder containing the downloaded files. On Windows, compare `Get-FileHash <filename> -Algorithm SHA256` with the matching checksum line.
+### Verify downloads
 
-Builds are unsigned unless signing credentials have been configured for the release workflow. Unsigned Windows installers may show a SmartScreen warning. Unsigned or unnotarized macOS builds may be blocked by Gatekeeper; use only builds from a trusted release and follow macOS Privacy & Security prompts. Linux packages are unsigned; checksums verify file integrity but do not establish publisher identity. Each release draft identifies its signing status.
+Download `SHA256SUMS.txt` and the installer from the same GitHub Release. Compare the hash of your downloaded file with the line for its exact filename in the checksum file:
+
+```powershell
+Get-FileHash .\Focus-Tracker-Setup-<version>.exe -Algorithm SHA256
+```
+
+```sh
+shasum -a 256 Focus-Tracker-<version>-mac-universal.dmg
+```
+
+The command prints the file's SHA-256 hash; confirm it matches the corresponding entry in `SHA256SUMS.txt`. To verify every listed file automatically with `shasum -c SHA256SUMS.txt`, download all the release assets into the same folder first.
+
+Checksums help detect changed or corrupted downloads, but because they are hosted alongside the installers, they do not independently prove who published them.
+
+### Signing and security
+
+Each release's notes state whether its Windows installer is signed and whether its macOS app is signed and notarized. Builds without signing credentials are unsigned:
+
+- **Windows:** unsigned installers may show a SmartScreen unknown-publisher warning.
+- **macOS:** unsigned or unnotarized apps may be blocked or show Gatekeeper warnings. Do not disable Gatekeeper to install an app.
+- **Linux:** packages are unsigned; use the checksum to check file integrity, not publisher identity.
+
+Only download releases from this project's GitHub repository. If a release is unsigned or macOS will not open it, do not bypass operating-system protections unless you can independently establish that the specific build is trustworthy.
 
 ## Develop locally
 
@@ -64,7 +86,7 @@ npm run smoke
 
 The smoke test exercises the dashboard, timer controls, mode selection, settings, statistics and history views, History controls, and switching to Micro Mode while a timer runs. It leaves development data under `FocusTracker-Smoke` so normal app preferences are untouched.
 
-Build output goes to `release/`. Electron Builder packages the app. The cross-platform workflow builds on native Windows, macOS, and Linux runners for pull requests and manual runs. These jobs, especially macOS builds, may consume billable GitHub Actions minutes depending on the repository plan and quota. Version tags matching the package version build all targets, calculate SHA-256 checksums, and prepare an unpublished draft GitHub Release. A maintainer must review and publish that draft manually.
+Build output goes to `release/`. Electron Builder packages the app. The cross-platform workflow builds on native Windows, macOS, and Linux runners for pull requests and manual runs. Standard GitHub-hosted runners are free for public repositories; artifact storage and retention are subject to GitHub's plan limits. Version tags matching the package version build all targets, calculate SHA-256 checksums, and prepare an unpublished draft GitHub Release. A maintainer must review and publish that draft manually.
 
 ## Using the app
 
