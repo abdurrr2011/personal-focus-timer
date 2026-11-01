@@ -59,6 +59,17 @@ async function main() {
     assert.equal(snapshot.runtime.windowMode, 'dashboard');
     assert.equal(await evaluate('document.body.classList.contains("compact")'), false);
     assert.equal(await evaluate('document.querySelector(\'[data-action="micro"]\').textContent.trim()'), '━ Micro Mode');
+    assert.equal(await evaluate('document.querySelector(\'#launch-setting input\').disabled'), true);
+    await evaluate(`(() => render({
+      ...state,
+      timer: state.timer,
+      settings: state.settings,
+      runtime: { packaged: true, platform: 'linux', windowMode: 'dashboard' },
+      statistics: state.statistics,
+    }))()`);
+    assert.equal(await evaluate('document.querySelector(\'#launch-setting input\').disabled'), true);
+    assert.match(await evaluate('document.querySelector("#launch-setting small").textContent'), /installed Windows app/);
+    await evaluate('window.focusTracker.getSnapshot().then(render)');
     assert.match(snapshot.settings.soundAlertUrl, /assets\/faceit_accept_sound_epic_-8962405019821701368\.mp3$/);
     assert.equal(await evaluate('document.querySelector("#preview-sound").disabled'), false);
     assert.equal(await evaluate('document.querySelector("#sound-file-label").textContent'), 'Built-in MP3');

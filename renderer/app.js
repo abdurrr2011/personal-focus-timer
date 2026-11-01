@@ -192,10 +192,12 @@ function render(snapshot) {
   if (soundFileLabel) soundFileLabel.textContent = state.settings.soundAlertFile ? 'Custom sound selected' : 'Built-in MP3';
   const startupSetting = $('#launch-setting');
   const startupInput = startupSetting.querySelector('input');
-  const packaged = Boolean(snapshot.runtime?.packaged);
-  startupInput.disabled = !packaged;
-  startupSetting.classList.toggle('is-disabled', !packaged);
-  startupSetting.querySelector('small').textContent = packaged ? 'Open Focus Tracker when you sign in.' : 'Available in the installed app.';
+  const supportsLoginSetting = Boolean(snapshot.runtime?.packaged && snapshot.runtime?.platform === 'win32');
+  startupInput.disabled = !supportsLoginSetting;
+  startupSetting.classList.toggle('is-disabled', !supportsLoginSetting);
+  startupSetting.querySelector('small').textContent = supportsLoginSetting
+    ? 'Open Focus Tracker when you sign in.'
+    : 'Available in the installed Windows app.';
 
   const timer = state.timer;
   const info = MODE_INFO[timer.mode] || MODE_INFO.focus;

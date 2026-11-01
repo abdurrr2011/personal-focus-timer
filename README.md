@@ -2,7 +2,7 @@
   <a href="https://www.electronjs.org/"><img src="assets/electron-logo.svg" alt="Electron logo" width="96" height="96"></a>
   <h1>Focus Tracker</h1>
   <p><strong>A little more focus. A lot more flow.</strong></p>
-  <p>A minimal Pomodoro timer for Windows 11, with sessions, breaks, and your preferences kept on your device.</p>
+  <p>A minimal desktop Pomodoro timer, with sessions, breaks, and your preferences kept on your device.</p>
 </div>
 
 ## What it does
@@ -14,18 +14,24 @@
 - Export History or Statistics to a UTF-8 CSV file using the native Save As dialog. Clearing History requires confirmation and does not change Statistics or previously exported files.
 - Deadline-based countdowns continue accurately when the window is hidden, the PC is busy, or the app is reopened.
 - Frameless, draggable dashboard window (1160×740, minimum 900×640); optional always-on-top, with an optional Micro Mode timer strip (320×52, minimum 208×38).
-- Windows desktop notifications, optional completion sound (the bundled MP3 by default, or a custom WAV, MP3, OGG, or M4A file), system-tray controls, and optional launch at sign-in.
+- Desktop notifications, optional completion sound (the bundled MP3 by default, or a custom WAV, MP3, OGG, or M4A file), system-tray controls, and optional Windows launch at sign-in.
 - Settings are written locally to the app's user-data folder. No network requests, accounts, analytics, or cloud sync.
 
-## Install the Windows app
+## Install the app
 
-Download the Windows installer from the project's [latest GitHub release](https://github.com/abdurrr2011/personal-focus-timer-desk-app/releases/latest). If there is no published release yet, download the `focus-tracker-windows-x64` artifact from a successful run on the [Actions page](https://github.com/abdurrr2011/personal-focus-timer-desk-app/actions/workflows/windows.yml). The installer offers a choice of installation directory and adds Start-menu and desktop shortcuts. No separate Node.js installation is needed to run the installed app.
+Download the package for your system from the project's [latest GitHub release](https://github.com/abdurrr2011/personal-focus-timer-desk-app/releases/latest):
 
-The installer is currently unsigned. Windows SmartScreen may show an unknown-publisher warning; verify that the installer came from a trusted build before allowing it to run.
+- **Windows x64:** run the NSIS `.exe` installer. It offers an installation-directory choice and creates Start-menu and desktop shortcuts.
+- **macOS (Intel and Apple silicon):** open the universal `.dmg` and move Focus Tracker to Applications, or use the `.zip`.
+- **Linux x64:** use the `.AppImage` on a desktop distribution with FUSE support, or install the `.deb` on a Debian-based distribution.
+
+Use the accompanying `SHA256SUMS.txt` to verify downloads. On macOS or Linux, run `shasum -a 256 -c SHA256SUMS.txt` in the folder containing the downloaded files. On Windows, compare `Get-FileHash <filename> -Algorithm SHA256` with the matching checksum line.
+
+Builds are unsigned unless signing credentials have been configured for the release workflow. Unsigned Windows installers may show a SmartScreen warning. Unsigned or unnotarized macOS builds may be blocked by Gatekeeper; use only builds from a trusted release and follow macOS Privacy & Security prompts. Linux packages are unsigned; checksums verify file integrity but do not establish publisher identity. Each release draft identifies its signing status.
 
 ## Develop locally
 
-Requirements: Windows 11 x64, Node.js 22.12 or newer, npm 11 or newer, and Git. The Windows installer is built on Windows; the development scripts and timer unit tests use Node.js.
+Requirements: Windows, macOS, or Linux; Node.js 22.12 or newer; npm 11 or newer; and Git. Build each platform on its matching operating-system runner; macOS builds also require Apple's `sips` and `iconutil` utilities.
 
 ```powershell
 git clone https://github.com/abdurrr2011/personal-focus-timer-desk-app.git
@@ -41,7 +47,10 @@ For an existing local checkout, skip `git clone` and run the commands from the p
 ```powershell
 npm run check    # syntax-check main, preload, timer, storage, statistics, exports, history, and renderer code
 npm test         # unit tests for timer behavior, durable settings, statistics, CSV exports, and session history
-npm run dist     # checks, tests, then create the Windows x64 NSIS installer
+npm run dist     # checks, tests, and build for the current host platform
+npm run dist:win # Windows x64 NSIS installer
+npm run dist:mac # universal macOS DMG and ZIP (requires macOS)
+npm run dist:linux # Linux x64 AppImage and DEB (requires Linux)
 ```
 
 For a local interactive smoke test, start Electron with a loopback-only debugging port and an isolated data folder, then run `npm run smoke` in another terminal:
@@ -55,7 +64,7 @@ npm run smoke
 
 The smoke test exercises the dashboard, timer controls, mode selection, settings, statistics and history views, History controls, and switching to Micro Mode while a timer runs. It leaves development data under `FocusTracker-Smoke` so normal app preferences are untouched.
 
-Build output goes to `release/`. `npm run dist` uses electron-builder to package Electron and produce an NSIS setup executable. CI runs the same checks and uploads the installer as a build artifact.
+Build output goes to `release/`. Electron Builder packages the app. The cross-platform workflow builds on native Windows, macOS, and Linux runners for pull requests and manual runs. These jobs, especially macOS builds, may consume billable GitHub Actions minutes depending on the repository plan and quota. Version tags matching the package version build all targets, calculate SHA-256 checksums, and prepare an unpublished draft GitHub Release. A maintainer must review and publish that draft manually.
 
 ## Using the app
 
@@ -69,7 +78,7 @@ Build output goes to `release/`. `npm run dist` uses electron-builder to package
 - **History:** completed focus and break sessions are kept locally in `session-history.json`, newest first. All records are retained unless you choose **Clear History** and confirm; clearing does not affect Statistics. Use **Export CSV** to save the session records.
 - **Always on top:** enabled by default; turn it off in Settings.
 - **Close button:** hides the window to the system tray so an active timer is not lost. Use the tray menu's **Quit Focus Tracker** to exit.
-- **Start with Windows:** available in the installed Windows app. It is disabled when running from source because a development checkout is not a stable sign-in target.
+- **Start with Windows:** available in the installed Windows app only.
 
 Session lengths can be configured from 1 to 120 minutes. Changing a duration resets the current session to the new configured length. Choose 2–8 focus sessions before a long break in Settings; changing this interval starts a fresh cycle without changing your lifetime completed-session count.
 
@@ -93,8 +102,8 @@ src/                 Electron main process, preload bridge, timer, storage
 renderer/            Dashboard UI and styles
 assets/              Original Focus Tracker icon assets
  test/                Node built-in test suite
- tools/               Icon-generation utility (Python standard library)
- .github/workflows/   Windows CI and installer artifact
+tools/               Icon and release-manifest utilities
+.github/workflows/   Windows CI and cross-platform release pipeline
  README.md
  PROJECT_STATUS.md
  TROUBLESHOOTING.md
@@ -104,7 +113,7 @@ assets/              Original Focus Tracker icon assets
 
 The renderer runs with context isolation, sandboxing, and Node integration disabled. A restrictive Content Security Policy blocks network connections and remote scripts. The only IPC functions are exposed by the preload bridge. User settings, timer state, statistics, and session history stay in the local app-data directory.
 
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common Windows setup and notification issues, and [PROJECT_STATUS.md](PROJECT_STATUS.md) for verification state and remaining limitations.
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common setup and notification issues, [docs/RELEASING.md](docs/RELEASING.md) for release and signing setup, and [PROJECT_STATUS.md](PROJECT_STATUS.md) for verification state and remaining limitations.
 
 ## License
 
