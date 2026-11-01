@@ -74,6 +74,8 @@ jobs:
               npm run dist:mac -- --config.forceCodeSigning=true
             fi
           else
+            unset CSC_LINK CSC_KEY_PASSWORD
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
             npm run dist:mac
           fi
         env:
