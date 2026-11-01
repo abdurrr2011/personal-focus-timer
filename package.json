@@ -2,7 +2,8 @@
   "name": "focus-tracker",
   "version": "1.0.0",
   "private": true,
-  "description": "A tiny neon-pixel Pomodoro timer for Windows 11.",
+  "description": "A minimal cross-platform Pomodoro timer.",
+  "homepage": "https://github.com/abdurrr2011/personal-focus-timer-desk-app",
   "author": "Abdurakhman",
   "license": "MIT",
   "engines": {
@@ -14,8 +15,11 @@
     "start": "electron .",
     "test": "node --test",
     "smoke": "node tools/smoke-electron.cjs",
-    "check": "node --check src/main.js && node --check src/preload.js && node --check src/timer.js && node --check src/store.js && node --check src/statistics.js && node --check src/session-history.js && node --check src/csv-export.js && node --check renderer/app.js",
-    "dist": "npm run check && npm test && electron-builder --win nsis"
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/timer.js && node --check src/store.js && node --check src/statistics.js && node --check src/session-history.js && node --check src/csv-export.js && node --check tools/release-artifacts.cjs && node --check renderer/app.js",
+    "dist": "npm run check && npm test && electron-builder",
+    "dist:win": "npm run check && npm test && electron-builder --win nsis",
+    "dist:mac": "npm run check && npm test && electron-builder --mac dmg zip --universal",
+    "dist:linux": "npm run check && npm test && electron-builder --linux AppImage deb"
   },
   "devDependencies": {
     "electron": "^45.1.0",
@@ -48,6 +52,37 @@
         }
       ],
       "artifactName": "Focus-Tracker-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "icon": "build/focus-mark.icns",
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["universal"]
+        },
+        {
+          "target": "zip",
+          "arch": ["universal"]
+        }
+      ],
+      "artifactName": "Focus-Tracker-${version}-${os}-${arch}.${ext}"
+    },
+    "linux": {
+      "icon": "assets/focus-mark.png",
+      "category": "Utility",
+      "maintainer": "Abdurakhman <abdurrr2011@users.noreply.github.com>",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "Focus-Tracker-${version}-${os}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
