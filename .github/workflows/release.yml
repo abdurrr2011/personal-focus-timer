@@ -32,8 +32,8 @@ jobs:
             id: linux-x64
             runner: ubuntu-latest
             artifact-path: |
-              release/Focus-Tracker-*-linux-x64.AppImage
-              release/Focus-Tracker-*-linux-x64.deb
+              release/Focus-Tracker-*.AppImage
+              release/Focus-Tracker-*.deb
     steps:
       - name: Check out source
         uses: actions/checkout@v4

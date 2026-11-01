@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "A minimal cross-platform Pomodoro timer.",
+  "homepage": "https://github.com/abdurrr2011/personal-focus-timer-desk-app",
   "author": "Abdurakhman",
   "license": "MIT",
   "engines": {
@@ -70,6 +71,7 @@
     "linux": {
       "icon": "assets/focus-mark.png",
       "category": "Utility",
+      "maintainer": "Abdurakhman <abdurrr2011@users.noreply.github.com>",
       "target": [
         {
           "target": "AppImage",

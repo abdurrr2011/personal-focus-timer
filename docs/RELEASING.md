@@ -10,6 +10,8 @@ Electron Builder produces these x64/universal packages on native GitHub-hosted r
 | macOS | Universal `.dmg` and `.zip` (Intel and Apple silicon) |
 | Linux | `.AppImage` and `.deb` (x64) |
 
+The Debian package metadata uses the project's public GitHub no-reply maintainer address.
+
 Use the matching local command to build on a supported host: `npm run dist:win`, `npm run dist:mac`, or `npm run dist:linux`. Each command runs syntax checks and the test suite before packaging. The macOS command generates its `.icns` from the checked-in PNG using the macOS `sips` and `iconutil` tools.
 
 The `Cross-platform builds and releases` workflow builds on pull requests and can be run manually with **Actions → Cross-platform builds and releases → Run workflow**. These runs upload temporary workflow artifacts and do not create a release. Pull-request and manual builds do not receive signing secrets.
