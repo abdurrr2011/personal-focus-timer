@@ -14,7 +14,7 @@
     "start": "electron .",
     "test": "node --test",
     "smoke": "node tools/smoke-electron.cjs",
-    "check": "node --check src/main.js && node --check src/preload.js && node --check src/timer.js && node --check src/store.js && node --check src/statistics.js && node --check renderer/app.js",
+    "check": "node --check src/main.js && node --check src/preload.js && node --check src/timer.js && node --check src/store.js && node --check src/statistics.js && node --check src/session-history.js && node --check src/csv-export.js && node --check renderer/app.js",
     "dist": "npm run check && npm test && electron-builder --win nsis"
   },
   "devDependencies": {

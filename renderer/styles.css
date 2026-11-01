@@ -83,9 +83,15 @@ h1 { margin: 0; color: var(--text); font-size: 24px; font-weight: 650; letter-sp
 body.break-mode .control-primary { border-color: var(--accent); background: var(--accent); }
 body.long-break-mode .control-primary { border-color: var(--accent); background: var(--accent); }
 .play-symbol { font-size: 13px; }
+.data-page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .page-heading { margin: 8px 0 24px; }
 .page-heading h1 { margin: 0; }
 .page-description { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
+.page-actions { display: flex; flex: 0 0 auto; gap: 8px; margin-top: 21px; }
+.quiet-action { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .055); color: #d3d1df; font-size: 11px; cursor: pointer; transition: background-color .16s ease, border-color .16s ease; }
+.quiet-action:hover { border-color: rgba(255, 255, 255, .23); background: rgba(255, 255, 255, .12); color: white; }
+.destructive-action { color: #ffaaa7; }
+.destructive-action:hover { border-color: rgba(255, 84, 84, .32); background: rgba(255, 84, 84, .12); color: #ffc2c0; }
 .stat-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .stat-card { display: flex; min-width: 0; min-height: 123px; flex-direction: column; align-items: flex-start; padding: 16px 17px; border: 1px solid var(--line); border-radius: 17px; background: rgba(255, 255, 255, .055); }
 .stat-label { color: #aaa8bc; font-size: 12px; }
@@ -106,6 +112,22 @@ body.long-break-mode .control-primary { border-color: var(--accent); background:
 .weekly-day-label { color: #7d7b94; font-size: 10px; }
 .weekly-day.today .weekly-day-label { color: #f1f0f8; font-weight: 650; }
 .statistics-note { margin: 15px 0 0; color: #77758d; font-size: 11px; }
+.history-view { padding-bottom: 24px; }
+.history-list { display: grid; gap: 20px; }
+.history-empty { display: grid; min-height: 150px; place-items: center; padding: 24px; border: 1px dashed var(--line); border-radius: 17px; color: var(--muted); text-align: center; }
+.history-group { min-width: 0; }
+.history-date { margin: 0 0 9px 3px; color: #c9c7d8; font-size: 13px; font-weight: 600; }
+.history-day-list { overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: rgba(255, 255, 255, .045); }
+.history-item { display: grid; min-height: 62px; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 13px; padding: 10px 17px; }
+.history-item + .history-item { border-top: 1px solid var(--line-soft); }
+.history-mode-mark { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 10px rgba(8, 124, 255, .25); }
+.history-item.shortBreak .history-mode-mark { background: #ff9f0a; box-shadow: 0 0 10px rgba(255, 159, 10, .22); }
+.history-item.longBreak .history-mode-mark { background: #bf72ef; box-shadow: 0 0 10px rgba(191, 114, 239, .22); }
+.history-details { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
+.history-details strong { overflow: hidden; color: #ecebf4; font-size: 12px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.history-details span, .history-duration { color: #9290a7; font-size: 11px; font-variant-numeric: tabular-nums; }
+.history-duration { color: #d3d1df; }
+.history-note { margin: 15px 0 0; color: #77758d; font-size: 11px; line-height: 1.5; }
 .settings-view { padding-bottom: 26px; }
 .settings-section-title { display: flex; align-items: center; justify-content: space-between; margin: 23px 0 10px; }
 .settings-section-title > span { color: #838198; font-size: 9px; font-weight: 650; letter-spacing: 1px; }
@@ -167,6 +189,8 @@ body.micro .micro-hud { display: flex; width: 100%; height: 100%; min-height: 0;
 }
 @media (max-width: 520px) {
   .view-heading { align-items: flex-start; flex-direction: column; gap: 14px; }
+  .data-page-heading { flex-direction: column; gap: 0; }
+  .page-actions { margin: -10px 0 21px; }
   .mode-tabs { width: 100%; justify-content: space-between; }
   .mode-tab { flex: 1; padding: 0 6px; font-size: 11px; }
   .timer-surface { min-height: 370px; }

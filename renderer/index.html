@@ -21,6 +21,9 @@
         <button class="nav-item" type="button" data-view="statistics" aria-label="Statistics" aria-pressed="false" title="Statistics">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-7M22 20H2"></path></svg>
         </button>
+        <button class="nav-item" type="button" data-view="history" aria-label="History" aria-pressed="false" title="History">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
+        </button>
         <button class="nav-item" type="button" data-view="settings" aria-label="Settings" aria-pressed="false" title="Settings">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M2 14h4M10 8h4M18 16h4"></path></svg>
         </button>
@@ -66,10 +69,15 @@
         </section>
 
         <section class="view-panel statistics-view" id="view-statistics" aria-labelledby="statistics-heading" hidden>
-          <div class="page-heading">
-            <p class="eyebrow">YOUR ACTIVITY</p>
-            <h1 id="statistics-heading">Statistics</h1>
-            <p class="page-description">A clear view of your focus, day by day.</p>
+          <div class="data-page-heading">
+            <div class="page-heading">
+              <p class="eyebrow">YOUR ACTIVITY</p>
+              <h1 id="statistics-heading">Statistics</h1>
+              <p class="page-description">A clear view of your focus, day by day.</p>
+            </div>
+            <div class="page-actions">
+              <button class="quiet-action" type="button" data-action="export-statistics">Export CSV</button>
+            </div>
           </div>
           <div class="stat-cards">
             <article class="stat-card"><span class="stat-label">Completed today</span><strong id="stat-completed">0</strong><span class="stat-caption">focus sessions</span></article>
@@ -82,6 +90,22 @@
             <div class="weekly-chart" id="weekly-chart" role="list" aria-label="Focus time by day this week"></div>
           </section>
           <p class="statistics-note">Completed focus sessions are saved on this device.</p>
+        </section>
+
+        <section class="view-panel history-view" id="view-history" aria-labelledby="history-heading" hidden>
+          <div class="data-page-heading">
+            <div class="page-heading">
+              <p class="eyebrow">YOUR COMPLETED SESSIONS</p>
+              <h1 id="history-heading">History</h1>
+              <p class="page-description">A local record of your finished focus and break sessions.</p>
+            </div>
+            <div class="page-actions">
+              <button class="quiet-action" type="button" data-action="export-history">Export CSV</button>
+              <button class="quiet-action destructive-action" type="button" data-action="clear-history" hidden>Clear History</button>
+            </div>
+          </div>
+          <div class="history-list" id="history-list" aria-live="polite"></div>
+          <p class="history-note">History is stored on this device and begins with sessions completed after this feature was added.</p>
         </section>
 
         <section class="view-panel settings-view" id="view-settings" aria-labelledby="settings-heading" hidden>

@@ -10,6 +10,8 @@
 - Focus, short-break, and long-break sessions, with a configurable long break after 2–8 completed focus sessions (four by default).
 - Start, pause, resume, reset, and switch session type; timer state and focus-session history are saved locally.
 - Statistics show sessions completed today, focus time today and overall, active-day streaks, and a weekly focus-time chart.
+- A History screen lists completed focus and break sessions by date, with their completion time and duration. New individual records start accumulating after this feature is installed; previous daily totals cannot be converted into session records.
+- Export History or Statistics to a UTF-8 CSV file using the native Save As dialog. Clearing History requires confirmation and does not change Statistics or previously exported files.
 - Deadline-based countdowns continue accurately when the window is hidden, the PC is busy, or the app is reopened.
 - Frameless, draggable dashboard window (1160×740, minimum 900×640); optional always-on-top, with an optional Micro Mode timer strip (320×52, minimum 208×38).
 - Windows desktop notifications, optional completion sound (the bundled MP3 by default, or a custom WAV, MP3, OGG, or M4A file), system-tray controls, and optional launch at sign-in.
@@ -17,7 +19,7 @@
 
 ## Install the Windows app
 
-Download the Windows installer from the project's [latest GitHub release](https://github.com/abdurrr2011/focus-tracker/releases/latest). If there is no published release yet, download the `focus-tracker-windows-x64` artifact from a successful run on the [Actions page](https://github.com/abdurrr2011/focus-tracker/actions/workflows/windows.yml). The installer offers a choice of installation directory and adds Start-menu and desktop shortcuts. No separate Node.js installation is needed to run the installed app.
+Download the Windows installer from the project's [latest GitHub release](https://github.com/abdurrr2011/personal-focus-timer-desk-app/releases/latest). If there is no published release yet, download the `focus-tracker-windows-x64` artifact from a successful run on the [Actions page](https://github.com/abdurrr2011/personal-focus-timer-desk-app/actions/workflows/windows.yml). The installer offers a choice of installation directory and adds Start-menu and desktop shortcuts. No separate Node.js installation is needed to run the installed app.
 
 The installer is currently unsigned. Windows SmartScreen may show an unknown-publisher warning; verify that the installer came from a trusted build before allowing it to run.
 
@@ -26,7 +28,7 @@ The installer is currently unsigned. Windows SmartScreen may show an unknown-pub
 Requirements: Windows 11 x64, Node.js 22.12 or newer, npm 11 or newer, and Git. The Windows installer is built on Windows; the development scripts and timer unit tests use Node.js.
 
 ```powershell
-git clone https://github.com/abdurrr2011/focus-tracker.git
+git clone https://github.com/abdurrr2011/personal-focus-timer-desk-app.git
 cd focus-tracker
 npm ci
 npm start
@@ -37,8 +39,8 @@ For an existing local checkout, skip `git clone` and run the commands from the p
 ### Checks and build
 
 ```powershell
-npm run check    # syntax-check main, preload, timer, storage, statistics, and renderer code
-npm test         # unit tests for timer behavior, durable settings, and statistics
+npm run check    # syntax-check main, preload, timer, storage, statistics, exports, history, and renderer code
+npm test         # unit tests for timer behavior, durable settings, statistics, CSV exports, and session history
 npm run dist     # checks, tests, then create the Windows x64 NSIS installer
 ```
 
@@ -51,7 +53,7 @@ npm start -- --remote-debugging-port=9224
 npm run smoke
 ```
 
-The smoke test exercises the dashboard, timer controls, mode selection, settings, statistics view, and switching to Micro Mode while a timer runs. It leaves development data under `FocusTracker-Smoke` so normal app preferences are untouched.
+The smoke test exercises the dashboard, timer controls, mode selection, settings, statistics and history views, History controls, and switching to Micro Mode while a timer runs. It leaves development data under `FocusTracker-Smoke` so normal app preferences are untouched.
 
 Build output goes to `release/`. `npm run dist` uses electron-builder to package Electron and produce an NSIS setup executable. CI runs the same checks and uploads the installer as a build artifact.
 
@@ -60,10 +62,11 @@ Build output goes to `release/`. `npm run dist` uses electron-builder to package
 - **Start / pause / resume:** the main button or `Space`.
 - **Reset:** the reset button or `R`.
 - **Stop:** the square button resets the active session; it does not count as completed.
-- **Change mode:** select Focus, Short Break, or Long Break. Selecting a mode resets the timer to that mode's configured length.
+- **Change mode:** select Focus, Short Break, or Long Break, or press `1`, `2`, or `3` while the app window is focused. Selecting a mode resets the timer to that mode's configured length. Number shortcuts are ignored while typing in a field.
 - **Navigation:** use the sidebar to switch between Timer, Statistics, and Settings.
 - **Micro Mode:** choose **Micro Mode** for a slim 320 × 52 timer strip with start/pause and mode controls; it can shrink to 208 × 38. Expand returns to the dashboard without interrupting the timer.
-- **Statistics:** completed focus sessions update daily activity, the weekly chart, and streaks. Only finished focus sessions count; resetting or stopping early does not.
+- **Statistics:** completed focus sessions update daily activity, the weekly chart, and streaks. Only finished focus sessions count; resetting or stopping early does not. Use **Export CSV** to save the summary metrics and daily totals.
+- **History:** completed focus and break sessions are kept locally in `session-history.json`, newest first. All records are retained unless you choose **Clear History** and confirm; clearing does not affect Statistics. Use **Export CSV** to save the session records.
 - **Always on top:** enabled by default; turn it off in Settings.
 - **Close button:** hides the window to the system tray so an active timer is not lost. Use the tray menu's **Quit Focus Tracker** to exit.
 - **Start with Windows:** available in the installed Windows app. It is disabled when running from source because a development checkout is not a stable sign-in target.
@@ -78,7 +81,7 @@ The bundled MP3 in `assets/` is the default completion alert. Enable **Sound ale
 - **Renderer:** a local HTML/CSS/JavaScript dashboard with no external runtime dependencies.
 - **Preload bridge:** narrow, validated IPC surface; renderer has no Node.js access.
 - **Timer:** a deadline timestamp rather than decrementing tick counters, so missed UI frames cannot add time to the session.
-- **Persistence:** atomic JSON file in Electron's per-user app-data folder, including daily focus aggregates for statistics.
+- **Persistence:** atomic JSON files in Electron's per-user app-data folder for settings, daily focus aggregates, and the complete session history.
 
 Electron was chosen over a Rust-based wrapper because this Windows environment has Node/npm available but no Rust toolchain. Electron provides the required native desktop features directly and avoids making users install a runtime. The UI itself has no framework dependency.
 
@@ -86,6 +89,7 @@ Electron was chosen over a Rust-based wrapper because this Windows environment h
 
 ```text
 src/                 Electron main process, preload bridge, timer, storage
+                     and statistics/session-history/CSV-export helpers
 renderer/            Dashboard UI and styles
 assets/              Original Focus Tracker icon assets
  test/                Node built-in test suite
@@ -98,7 +102,7 @@ assets/              Original Focus Tracker icon assets
 
 ## Security and privacy
 
-The renderer runs with context isolation, sandboxing, and Node integration disabled. A restrictive Content Security Policy blocks network connections and remote scripts. The only IPC functions are exposed by the preload bridge. User settings and timer state stay in the local app-data directory.
+The renderer runs with context isolation, sandboxing, and Node integration disabled. A restrictive Content Security Policy blocks network connections and remote scripts. The only IPC functions are exposed by the preload bridge. User settings, timer state, statistics, and session history stay in the local app-data directory.
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common Windows setup and notification issues, and [PROJECT_STATUS.md](PROJECT_STATUS.md) for verification state and remaining limitations.
 
