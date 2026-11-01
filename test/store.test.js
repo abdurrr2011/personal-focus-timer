@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { createStore, sanitizeSettings, sanitizeActivity } = require('../src/store');
+const { createSessionRecord } = require('../src/session-history');
 
 function withStore(run) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'focus-tracker-'));
@@ -36,6 +37,66 @@ test('malformed daily activity is ignored and valid totals are sanitized', () =>
     '2026-10-30': { completedSessions: 2, focusMinutes: 50 },
   }), {
     '2026-10-30': { completedSessions: 2, focusMinutes: 50 },
+  });
+});
+
+test('completed-session history is stored separately and survives reloads', () => {
+  withStore((store) => {
+    const history = [
+      createSessionRecord('shortBreak', new Date('2026-10-31T12:05:00.000Z'), 5 * 60_000),
+      createSessionRecord('focus', new Date('2026-10-31T12:00:00.000Z'), 25 * 60_000),
+    ];
+    store.save({ settings: {}, activity: { '2026-10-31': { completedSessions: 1, focusMinutes: 25 } } });
+    store.saveSessionHistory(history);
+    const loaded = createStore(store.directory);
+    assert.notEqual(store.historyFilePath, store.filePath);
+    assert.deepEqual(loaded.loadSessionHistory(), history);
+    assert.deepEqual(loaded.load().activity, { '2026-10-31': { completedSessions: 1, focusMinutes: 25 } });
+  });
+});
+
+test('clearing session history persists an empty list without changing statistics', () => {
+  withStore((store) => {
+    const activity = { '2026-10-31': { completedSessions: 2, focusMinutes: 50 } };
+    store.save({ settings: {}, activity });
+    store.saveSessionHistory([
+      createSessionRecord('focus', new Date('2026-10-31T12:00:00.000Z'), 25 * 60_000),
+    ]);
+
+    store.saveSessionHistory([]);
+    const reloaded = createStore(store.directory);
+    assert.deepEqual(reloaded.loadSessionHistory(), []);
+    assert.deepEqual(reloaded.load().activity, activity);
+  });
+});
+
+test('a missing session-history file starts with an empty history', () => {
+  withStore((store) => {
+    assert.deepEqual(store.loadSessionHistory(), []);
+  });
+});
+
+test('corrupt session-history data is reported instead of silently discarded', () => {
+  withStore((store) => {
+    fs.writeFileSync(store.historyFilePath, '{invalid json');
+    assert.throws(() => store.loadSessionHistory(), SyntaxError);
+  });
+});
+
+test('session history retains more than 500 records', () => {
+  withStore((store) => {
+    const history = Array.from({ length: 600 }, (_unused, index) => (
+      createSessionRecord('focus', new Date(Date.UTC(2026, 9, 31, 12, index)), 25 * 60_000)
+    ));
+    store.saveSessionHistory(history);
+    assert.equal(store.loadSessionHistory().length, 600);
+  });
+});
+
+test('an empty session-history file is reported as corrupt', () => {
+  withStore((store) => {
+    fs.writeFileSync(store.historyFilePath, '');
+    assert.throws(() => store.loadSessionHistory(), SyntaxError);
   });
 });
 

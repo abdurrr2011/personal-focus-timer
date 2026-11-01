@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { DEFAULT_SETTINGS } = require('./timer');
+const { sanitizeSessionHistory } = require('./session-history');
 
 const BOOLEAN_KEYS = ['notifications', 'alwaysOnTop', 'soundAlerts', 'launchAtLogin'];
 const MINUTE_KEYS = ['focusMinutes', 'shortBreakMinutes', 'longBreakMinutes'];
@@ -52,6 +53,7 @@ function sanitizeSettings(input = {}) {
 
 function createStore(directory) {
   const filePath = path.join(directory, 'settings.json');
+  const historyFilePath = path.join(directory, 'session-history.json');
 
   function load() {
     try {
@@ -85,7 +87,32 @@ function createStore(directory) {
     }
   }
 
-  return { directory, filePath, load, save };
+  function loadSessionHistory() {
+    let contents;
+    try {
+      contents = fs.readFileSync(historyFilePath, 'utf8');
+    } catch (error) {
+      if (error.code === 'ENOENT') return [];
+      throw error;
+    }
+    return sanitizeSessionHistory(JSON.parse(contents));
+  }
+
+  function saveSessionHistory(history) {
+    const records = sanitizeSessionHistory(history);
+    fs.mkdirSync(directory, { recursive: true });
+    const temporaryPath = `${historyFilePath}.${process.pid}.tmp`;
+    fs.writeFileSync(temporaryPath, `${JSON.stringify(records, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 });
+    try {
+      fs.renameSync(temporaryPath, historyFilePath);
+    } catch (error) {
+      try { fs.unlinkSync(temporaryPath); } catch {}
+      throw error;
+    }
+    return records;
+  }
+
+  return { directory, filePath, historyFilePath, load, save, loadSessionHistory, saveSessionHistory };
 }
 
 module.exports = { createStore, sanitizeSettings, sanitizeActivity };

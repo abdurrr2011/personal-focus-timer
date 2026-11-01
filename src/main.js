@@ -28,6 +28,8 @@ const {
 } = require('./timer');
 const { createStore, sanitizeSettings } = require('./store');
 const { addFocusSession, buildStatistics } = require('./statistics');
+const { createSessionRecord } = require('./session-history');
+const { createHistoryCsv, createStatisticsCsv } = require('./csv-export');
 
 const APP_ID = 'com.focus-tracker.desktop';
 const TICK_INTERVAL_MS = 250;
@@ -40,8 +42,8 @@ let timerState = null;
 let tickHandle = null;
 let shouldQuit = false;
 let dailyActivity = {};
+let sessionHistory = [];
 let microMode = false;
-let expiredWhileClosed = false;
 let expiredModeWhileClosed = 'focus';
 let startupCompletionPending = false;
 
@@ -78,9 +80,18 @@ function persist() {
   }
 }
 
-function recordCompletedSession(mode, completedAt = new Date()) {
-  if (mode !== 'focus') return;
-  dailyActivity = addFocusSession(dailyActivity, completedAt, durationFor('focus', settings) / 60_000);
+function recordCompletedSession(mode, completedAt, durationMs) {
+  const record = createSessionRecord(mode, completedAt, durationMs);
+  sessionHistory = [record, ...sessionHistory];
+  if (store) {
+    try {
+      sessionHistory = store.saveSessionHistory(sessionHistory);
+    } catch (error) {
+      console.error('Could not persist completed session history:', error);
+      mainWindow?.webContents.send('history:error');
+    }
+  }
+  if (mode === 'focus') dailyActivity = addFocusSession(dailyActivity, completedAt, durationMs / 60_000);
 }
 
 function sendSnapshot(completed = false, completedMode = null) {
@@ -105,6 +116,7 @@ function showCompletionNotification(previousMode) {
 
 function runCommand(action, value) {
   const now = Date.now();
+  const previousTimer = timerState;
   let completedMode = null;
   switch (action) {
     case 'start': timerState = startTimer(timerState, now, settings); break;
@@ -127,7 +139,10 @@ function runCommand(action, value) {
       break;
     default: throw new RangeError('Unknown timer command');
   }
-  if (completedMode !== null) recordCompletedSession(completedMode, new Date(now));
+  if (completedMode !== null) {
+    const completedAt = Number.isFinite(previousTimer.deadlineAt) ? new Date(previousTimer.deadlineAt) : new Date(now);
+    recordCompletedSession(completedMode, completedAt, durationFor(completedMode, settings));
+  }
   persist();
   updateTrayMenu();
   if (completedMode !== null) {
@@ -243,6 +258,39 @@ function createTray() {
 
 function registerIpc() {
   ipcMain.handle('state:get', () => snapshot());
+  ipcMain.handle('history:get', () => sessionHistory);
+  ipcMain.handle('history:clear', async () => {
+    if (sessionHistory.length === 0) return false;
+    const confirmation = await dialog.showMessageBox(mainWindow, {
+      type: 'warning',
+      title: 'Clear History',
+      message: 'Clear all session history?',
+      detail: 'This permanently removes the saved session records. Statistics will not be affected.',
+      buttons: ['Cancel', 'Clear History'],
+      defaultId: 0,
+      cancelId: 0,
+    });
+    if (confirmation.response !== 1) return false;
+    sessionHistory = store.saveSessionHistory([]);
+    return true;
+  });
+  ipcMain.handle('data:export', async (_event, kind) => {
+    if (kind !== 'history' && kind !== 'statistics') throw new RangeError('Unknown export type');
+    const date = new Date();
+    const dateLabel = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const isHistory = kind === 'history';
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: `Export ${isHistory ? 'History' : 'Statistics'}`,
+      defaultPath: path.join(app.getPath('documents'), `focus-tracker-${kind}-${dateLabel}.csv`),
+      filters: [{ name: 'CSV file', extensions: ['csv'] }],
+    });
+    if (result.canceled || !result.filePath) return null;
+    const csv = isHistory
+      ? createHistoryCsv(sessionHistory)
+      : createStatisticsCsv(dailyActivity, date);
+    fs.writeFileSync(result.filePath, csv, 'utf8');
+    return path.basename(result.filePath);
+  });
   ipcMain.handle('timer:command', (_event, request) => {
     if (!request || typeof request !== 'object') throw new TypeError('Invalid timer command');
     return runCommand(request.action, request.value);
@@ -309,8 +357,10 @@ function beginTimerLoop() {
   tickHandle = setInterval(() => {
     if (timerState.status === 'running' && remainingMs(timerState, Date.now()) <= 0) {
       const previousMode = timerState.mode;
+      const completedAt = Number.isFinite(timerState.deadlineAt) ? new Date(timerState.deadlineAt) : new Date();
+      const completedDuration = durationFor(previousMode, settings);
       timerState = finishSession(timerState, settings);
-      recordCompletedSession(previousMode);
+      recordCompletedSession(previousMode, completedAt, completedDuration);
       persist();
       updateTrayMenu();
       showCompletionNotification(previousMode);
@@ -329,20 +379,37 @@ if (!gotLock) {
     console.log('Focus Tracker main process started.');
     store = createStore(app.getPath('userData'));
     const saved = store.load();
+    sessionHistory = store.loadSessionHistory();
     settings = sanitizeSettings(saved.settings);
     dailyActivity = saved.activity;
     const now = Date.now();
-    expiredWhileClosed = saved.timer?.status === 'running' && Number.isFinite(saved.timer.deadlineAt) && saved.timer.deadlineAt <= now;
-    expiredModeWhileClosed = saved.timer?.mode || 'focus';
-    startupCompletionPending = expiredWhileClosed;
+    const restoredMode = saved.timer?.mode;
+    const validRestoredMode = MODES.includes(restoredMode);
+    const expiredWhileClosed = validRestoredMode
+      && saved.timer?.status === 'running'
+      && Number.isFinite(saved.timer.deadlineAt)
+      && saved.timer.deadlineAt <= now;
+    const restoredPausedAtZero = validRestoredMode
+      && saved.timer?.status === 'paused'
+      && Number.isFinite(saved.timer.remainingMs)
+      && saved.timer.remainingMs <= 0;
+    const completedAtStartup = expiredWhileClosed || restoredPausedAtZero;
+    expiredModeWhileClosed = validRestoredMode ? restoredMode : 'focus';
+    startupCompletionPending = completedAtStartup;
     timerState = restoreTimerState(saved.timer, settings, now);
-    if (expiredWhileClosed) recordCompletedSession(expiredModeWhileClosed, new Date(now));
+    if (completedAtStartup) {
+      recordCompletedSession(
+        expiredModeWhileClosed,
+        new Date(expiredWhileClosed ? saved.timer.deadlineAt : now),
+        durationFor(expiredModeWhileClosed, settings),
+      );
+    }
     applyLoginSetting();
     registerIpc();
     createWindow();
     createTray();
     beginTimerLoop();
-    if (expiredWhileClosed) {
+    if (completedAtStartup) {
       persist();
       showCompletionNotification(expiredModeWhileClosed);
     }

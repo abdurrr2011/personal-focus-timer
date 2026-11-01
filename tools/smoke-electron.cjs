@@ -64,6 +64,13 @@ async function main() {
     assert.equal(await evaluate('document.querySelector("#sound-file-label").textContent'), 'Built-in MP3');
     console.log('PASS initial focus state and default always-on-top setting');
 
+    for (const [key, mode] of [['2', 'shortBreak'], ['3', 'longBreak'], ['1', 'focus']]) {
+      await evaluate(`(() => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '${key}', bubbles: true })))()`);
+      await pause(180);
+      assert.equal((await getSnapshot()).timer.mode, mode);
+    }
+    console.log('PASS 1, 2, and 3 keyboard shortcuts switch session modes');
+
     await click('[data-action="toggle-timer"]');
     snapshot = await getSnapshot();
     assert.equal(snapshot.timer.status, 'running');
@@ -83,6 +90,11 @@ async function main() {
     await click('[data-view="settings"]');
     assert.equal(await evaluate('!document.querySelector("#view-settings").hidden'), true);
     assert.equal(await evaluate('document.querySelector(\'[name="focusMinutes"]\').value'), '25');
+    await evaluate(`(() => document.querySelector('[name="focusMinutes"]').dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true })))()`);
+    await pause(180);
+    assert.equal((await getSnapshot()).timer.mode, 'shortBreak');
+    await click('[data-mode="focus"]');
+    assert.equal((await getSnapshot()).timer.mode, 'focus');
     await evaluate(`(() => {
       window.__previewCalls = [];
       window.Audio = class {
@@ -144,6 +156,28 @@ async function main() {
     await click('[data-view="statistics"]');
     assert.equal(await evaluate('document.querySelectorAll("#weekly-chart .weekly-day").length'), 7);
     assert.equal(await evaluate('document.querySelector("#stat-completed").textContent'), '0');
+    assert.equal(await evaluate('Boolean(document.querySelector(\'[data-action="export-statistics"]\'))'), true);
+    await click('[data-view="history"]');
+    assert.deepEqual(await evaluate('window.focusTracker.getSessionHistory()'), []);
+    assert.match(await evaluate('document.querySelector("#history-list").textContent'), /No completed sessions yet/);
+    assert.equal(await evaluate('document.querySelector(\'[data-action="clear-history"]\').hidden'), true);
+    assert.equal(await evaluate('Boolean(document.querySelector(\'[data-action="export-history"]\'))'), true);
+    const historyRows = await evaluate(`(() => {
+      renderSessionHistory([
+        { id: 'later', mode: 'shortBreak', completedAt: '2026-10-31T12:05:00.000Z', durationMinutes: 5 },
+        { id: 'earlier', mode: 'focus', completedAt: '2026-10-31T12:00:00.000Z', durationMinutes: 25 },
+      ]);
+      return {
+        rows: [...document.querySelectorAll('.history-item')].map((row) => row.textContent.trim()),
+        clearVisible: !document.querySelector('[data-action="clear-history"]').hidden,
+      };
+    })()`);
+    assert.match(historyRows.rows[0], /Short Break/);
+    assert.match(historyRows.rows[1], /Focus Session/);
+    assert.match(historyRows.rows[0], /5m/);
+    assert.match(historyRows.rows[1], /25m/);
+    assert.equal(historyRows.clearVisible, true);
+    await evaluate('renderSessionHistory([])');
     await click('[data-view="timer"]');
 
     await click('[data-action="toggle-timer"]');
